@@ -37,7 +37,7 @@ td input:focus{border-color:var(--input-focus)}
 <button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
 <div class="chart-area">
   <div class="chart-title">各编程语言开发者使用率排名</div>
-  <div class="chart-subtitle">TOP语言达62.3%使用率 · YoY +15.8% · 已超目标线(55%) · 标签较长时首选横向条形图</div>
+  <div class="chart-subtitle">Stack Overflow 2024开发者调查 · 标签较长时首选横向条形图</div>
   <div id="chart"></div>
 </div>
 <div class="editor">
@@ -59,10 +59,8 @@ let DATA=JSON.parse(JSON.stringify(DEFAULT)),mode='dark';
 const chart=echarts.init(document.getElementById('chart'));
 window.addEventListener('resize',()=>chart.resize());
 function buildOption(t){
-  const sorted=[...DATA.labels.map((l,i)=>({l,v:DATA.values[i],prev:DATA.values[i]*0.88}))].sort((a,b)=>a.v-b.v);
-  const max=Math.max(...sorted.map(d=>d.v));
-  const target=55; // 目标线
-  return{backgroundColor:'transparent',tooltip:{trigger:'axis',backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor},axisPointer:{type:'shadow'},formatter:params=>{const p=params[0];const item=sorted.find(d=>d.l===p.name);const yoy=item?((item.v-item.prev)/item.prev*100).toFixed(1):0;return`<b>${p.name}</b><br/>当前: ${p.value}%<br/>去年: ${item?item.prev.toFixed(1):0}%<br/>YoY: <span style="color:${yoy>0?'#30D986':'#FF6B6B'}">${yoy>0?'+':''}${yoy}%</span>`}},grid:{left:110,right:90,top:30,bottom:40},xAxis:{type:'value',max:70,axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:t.split,type:'dashed'}},axisLabel:{color:t.labelColor,formatter:v=>v+'%'}},yAxis:{type:'category',data:sorted.map(d=>d.l),axisLine:{lineStyle:{color:t.axisBorder}},axisLabel:{color:t.textColor,fontSize:12},axisTick:{show:false}},series:[{type:'bar',barMaxWidth:28,data:sorted.map((d,i)=>({value:d.v,itemStyle:{color:d.v===max?{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:t.series[3]+'CC'},{offset:1,color:t.series[3]}]}:{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:t.series[0]+'88'},{offset:1,color:t.series[0]}]},borderRadius:[0,4,4,0],shadowBlur:d.v===max?15:0,shadowColor:d.v===max?(t.series[3]+'66'):'transparent'}})),label:{show:true,position:'right',color:t.labelColor,formatter:params=>{const yoy=((sorted[params.dataIndex].v-sorted[params.dataIndex].prev)/sorted[params.dataIndex].prev*100).toFixed(1);return`{val|${params.value}%} {yoy|${yoy>0?'+':''}${yoy}%}`;},rich:{val:{fontSize:12,fontWeight:600},yoy:{fontSize:10,color:t.labelColor+'AA',padding:[0,0,0,4]}}},markLine:{silent:true,symbol:'none',data:[{xAxis:target,lineStyle:{color:t.series[1]+'CC',width:2,type:'dashed'},label:{formatter:`目标 ${target}%`,position:'end',color:t.series[1],fontSize:11,padding:[2,6],backgroundColor:t.panelBg,borderRadius:4}}]},markPoint:{data:[{coord:[sorted[sorted.length-1].v,sorted[sorted.length-1].l],value:'TOP\n'+sorted[sorted.length-1].v+'%',symbol:'circle',symbolSize:50,itemStyle:{color:t.series[3]+'22',borderColor:t.series[3],borderWidth:2},label:{show:true,formatter:'{c}',color:t.series[3],fontSize:10,fontWeight:600}}]}}]};
+  const sorted=[...DATA.labels.map((l,i)=>({l,v:DATA.values[i]}))].sort((a,b)=>a.v-b.v);
+  return{backgroundColor:'transparent',tooltip:{trigger:'axis',backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor},axisPointer:{type:'shadow'}},grid:{left:100,right:80,top:20,bottom:30},xAxis:{type:'value',axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:t.split,type:'dashed'}},axisLabel:{color:t.labelColor,formatter:v=>v+'%'}},yAxis:{type:'category',data:sorted.map(d=>d.l),axisLine:{lineStyle:{color:t.axisBorder}},axisLabel:{color:t.textColor,fontSize:12},axisTick:{show:false}},series:[{type:'bar',barMaxWidth:28,data:sorted.map((d,i)=>({value:d.v,itemStyle:{color:{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:t.series[0]+'88'},{offset:1,color:t.series[0]}]},borderRadius:[0,4,4,0]}})),label:{show:true,position:'right',color:t.labelColor,formatter:v=>v.value+'%'}}]};
 }
 function renderTable(){
   const t=THEMES[mode];
