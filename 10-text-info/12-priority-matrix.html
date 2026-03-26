@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2×2优先级矩阵 Priority Matrix</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s;overflow:hidden}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF;--q1:#FF6B6B;--q2:#FFB340;--q3:#4D9EFF;--q4:#5A6A84}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF;--q1:#F5222D;--q2:#FA8C16;--q3:#2B7FFF;--q4:#8A9BB0}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:20px;min-width:0;overflow:hidden}
+.chart-title{font-size:17px;font-weight:700;color:var(--title);margin-bottom:2px;outline:none}
+.chart-subtitle{font-size:12px;color:var(--label);margin-bottom:14px}
+.matrix-wrapper{flex:1;display:flex;flex-direction:column;min-height:0}
+.axis-h{display:flex;justify-content:center;padding:0 0 6px 32px}
+.axis-h-track{display:flex;width:100%;justify-content:space-between;align-items:center}
+.axis-label{font-size:11px;color:var(--label);font-weight:600}
+.axis-arrow{flex:1;height:2px;background:linear-gradient(90deg,var(--border),var(--label));margin:0 8px;position:relative;border-radius:1px}
+.axis-arrow::after{content:'▶';position:absolute;right:-8px;top:-7px;font-size:10px;color:var(--label)}
+.matrix-body{flex:1;display:flex;min-height:0}
+.axis-v-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;width:28px;flex-shrink:0;position:relative}
+.axis-v-track{display:flex;flex-direction:column;align-items:center;height:100%;justify-content:space-between;gap:4px}
+.axis-v-arrow{width:2px;flex:1;background:linear-gradient(180deg,var(--label),var(--border));border-radius:1px;position:relative}
+.axis-v-arrow::before{content:'▲';position:absolute;top:-8px;left:-4px;font-size:10px;color:var(--label)}
+.grid{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;min-height:0}
+.quadrant{border-radius:12px;padding:14px;display:flex;flex-direction:column;border:1px solid;overflow:hidden;transition:border-color .2s;position:relative}
+.quadrant:hover{border-color:var(--input-focus)!important}
+.q1{background:rgba(255,107,107,0.08);border-color:rgba(255,107,107,0.25)}
+.q2{background:rgba(255,179,64,0.08);border-color:rgba(255,179,64,0.25)}
+.q3{background:rgba(77,158,255,0.08);border-color:rgba(77,158,255,0.25)}
+.q4{background:rgba(90,106,132,0.08);border-color:rgba(90,106,132,0.2)}
+.q-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.q-badge{padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.3px}
+.q1 .q-badge{background:rgba(255,107,107,0.2);color:var(--q1)}
+.q2 .q-badge{background:rgba(255,179,64,0.2);color:var(--q2)}
+.q3 .q-badge{background:rgba(77,158,255,0.2);color:var(--q3)}
+.q4 .q-badge{background:rgba(90,106,132,0.15);color:var(--q4)}
+.q-title{font-size:13px;font-weight:700}
+.q1 .q-title{color:var(--q1)}
+.q2 .q-title{color:var(--q2)}
+.q3 .q-title{color:var(--q3)}
+.q4 .q-title{color:var(--q4)}
+.q-action{font-size:10px;color:var(--label);margin-bottom:8px;font-style:italic}
+.items-list{display:flex;flex-direction:column;gap:3px;overflow-y:auto;flex:1}
+.task-item{display:flex;align-items:flex-start;gap:6px;font-size:12px;color:var(--text);line-height:1.5;padding:3px 0;border-bottom:1px dashed var(--border)}
+.task-item:last-child{border-bottom:none}
+.task-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.q1 .task-dot{background:var(--q1)}
+.q2 .task-dot{background:var(--q2)}
+.q3 .task-dot{background:var(--q3)}
+.q4 .task-dot{background:var(--q4)}
+.q-count{position:absolute;top:10px;right:14px;font-size:11px;font-weight:700;opacity:.4}
+.editor{width:260px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.editor-header{padding:14px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:3px}
+.editor-body{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:10px}
+.block-section{border-bottom:1px solid var(--border);padding-bottom:10px}
+.block-section:last-child{border-bottom:none}
+.block-label{font-size:10px;font-weight:700;letter-spacing:.5px;margin-bottom:6px;padding:2px 8px;border-radius:4px;display:inline-block}
+.item-row{display:flex;gap:4px;margin-bottom:3px}
+.item-row input{flex:1;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 7px;border-radius:4px;font-size:11px;outline:none}
+.item-row input:focus{border-color:var(--input-focus)}
+.del-btn{background:none;border:none;color:var(--label);cursor:pointer;font-size:13px;padding:0 3px}
+.del-btn:hover{color:#FF6B6B}
+.add-item{width:100%;padding:4px;background:transparent;border:1px dashed var(--border);color:var(--label);border-radius:4px;cursor:pointer;font-size:11px;margin-top:2px}
+.add-item:hover{border-color:var(--input-focus);color:var(--input-focus)}
+.editor-footer{padding:10px 14px;display:flex;gap:8px;border-top:1px solid var(--border);flex-shrink:0}
+.btn{flex:1;padding:6px 0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border)}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">产品迭代任务优先级矩阵</div>
+  <div class="chart-subtitle">2×2 Priority Matrix · 重要性 × 紧急度 · 四象限决策框架</div>
+  <div class="matrix-wrapper">
+    <div class="axis-h" style="padding-left:36px">
+      <div class="axis-h-track">
+        <span class="axis-label">低影响</span>
+        <div class="axis-arrow"></div>
+        <span class="axis-label" style="font-size:13px;font-weight:700;color:var(--title)">↔ 重要性</span>
+        <div class="axis-arrow" style="transform:scaleX(-1)"></div>
+        <span class="axis-label">高影响</span>
+      </div>
+    </div>
+    <div class="matrix-body">
+      <div class="axis-v-wrap">
+        <span class="axis-label" style="font-size:10px;writing-mode:vertical-rl;transform:rotate(180deg)">高紧急</span>
+        <div class="axis-v-track">
+          <div class="axis-v-arrow"></div>
+          <span class="axis-label" style="font-size:12px;font-weight:700;color:var(--title);writing-mode:vertical-rl;transform:rotate(180deg)">↕ 紧急度</span>
+          <div class="axis-v-arrow" style="transform:scaleY(-1)"></div>
+        </div>
+        <span class="axis-label" style="font-size:10px;writing-mode:vertical-rl;transform:rotate(180deg)">低紧急</span>
+      </div>
+      <div class="grid">
+        <!-- 高重要 + 高紧急 → 立即处理 -->
+        <div class="quadrant q1">
+          <div class="q-header">
+            <span class="q-badge">🔥 立即处理</span>
+            <span class="q-title">重要且紧急</span>
+          </div>
+          <div class="q-action">现在就做 · Do First</div>
+          <div class="items-list" id="list-q1"></div>
+          <span class="q-count" id="cnt-q1"></span>
+        </div>
+        <!-- 低重要 + 高紧急 → 委派 -->
+        <div class="quadrant q2">
+          <div class="q-header">
+            <span class="q-badge">📋 计划推进</span>
+            <span class="q-title">重要不紧急</span>
+          </div>
+          <div class="q-action">安排时间 · Schedule</div>
+          <div class="items-list" id="list-q2"></div>
+          <span class="q-count" id="cnt-q2"></span>
+        </div>
+        <!-- 高重要 + 低紧急 → 计划 -->
+        <div class="quadrant q3">
+          <div class="q-header">
+            <span class="q-badge">👥 委派他人</span>
+            <span class="q-title">紧急不重要</span>
+          </div>
+          <div class="q-action">授权处理 · Delegate</div>
+          <div class="items-list" id="list-q3"></div>
+          <span class="q-count" id="cnt-q3"></span>
+        </div>
+        <!-- 低重要 + 低紧急 → 删除 -->
+        <div class="quadrant q4">
+          <div class="q-header">
+            <span class="q-badge">🗑️ 暂时搁置</span>
+            <span class="q-title">不重要不紧急</span>
+          </div>
+          <div class="q-action">消除或延后 · Eliminate</div>
+          <div class="items-list" id="list-q4"></div>
+          <span class="q-count" id="cnt-q4"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>矩阵编辑</h3><p>按象限添加任务</p></div>
+  <div class="editor-body" id="editor-body"></div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const Q_META={
+  q1:{label:'🔥 重要且紧急',color:'var(--q1)',bg:'rgba(255,107,107,0.15)'},
+  q2:{label:'📋 重要不紧急',color:'var(--q2)',bg:'rgba(255,179,64,0.15)'},
+  q3:{label:'👥 紧急不重要',color:'var(--q3)',bg:'rgba(77,158,255,0.15)'},
+  q4:{label:'🗑️ 不重不紧',color:'var(--q4)',bg:'rgba(90,106,132,0.12)'}
+};
+const DEFAULT={
+  q1:['修复用户登录崩溃Bug','处理生产环境告警','紧急客户数据恢复'],
+  q2:['重构支付模块架构','编写技术文档','性能优化专项'],
+  q3:['参加非必要会议','日常状态同步','处理低优先邮件'],
+  q4:['优化内部工具UI','整理历史代码注释','非核心功能调研']
+};
+let state=JSON.parse(JSON.stringify(DEFAULT));
+
+function renderLists(){
+  Object.keys(state).forEach(k=>{
+    const el=document.getElementById('list-'+k);
+    const cnt=document.getElementById('cnt-'+k);
+    if(!el)return;
+    const c=Q_META[k].color;
+    el.innerHTML=state[k].map(t=>`<div class="task-item"><div class="task-dot"></div><span>${t}</span></div>`).join('');
+    cnt.textContent=state[k].length+'项';
+  });
+}
+function buildEditor(){
+  const eb=document.getElementById('editor-body');
+  eb.innerHTML=Object.keys(state).map(k=>{
+    const {label,color,bg}=Q_META[k];
+    const rows=state[k].map((t,i)=>`<div class="item-row"><input value="${t}" oninput="state['${k}'][${i}]=this.value"><button class="del-btn" onclick="removeItem('${k}',${i})">✕</button></div>`).join('');
+    return `<div class="block-section"><div class="block-label" style="color:${color};background:${bg}">${label}</div>${rows}<button class="add-item" onclick="addItem('${k}')">+ 添加任务</button></div>`;
+  }).join('');
+}
+function addItem(k){state[k].push('新任务');buildEditor();renderLists();}
+function removeItem(k,i){state[k].splice(i,1);buildEditor();renderLists();}
+function applyData(){renderLists();toast('已应用');}
+function resetData(){state=JSON.parse(JSON.stringify(DEFAULT));buildEditor();renderLists();toast('已重置');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,2000);}
+function toggleTheme(){
+  const isLight=document.documentElement.classList.toggle('theme-light');
+  document.getElementById('theme-btn').textContent=isLight?'🌑 暗色':'☀️ 亮色';
+}
+window.addEventListener('message',e=>{
+  if(e.data?.type==='setTheme'){
+    const isLight=e.data.theme==='light';
+    document.documentElement.classList.toggle('theme-light',isLight);
+    document.getElementById('theme-btn').textContent=isLight?'🌑 暗色':'☀️ 亮色';
+  }
+});
+buildEditor();renderLists();
+</script>
+</body>
+</html>

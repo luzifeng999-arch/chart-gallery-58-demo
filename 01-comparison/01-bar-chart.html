@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -38,8 +38,8 @@ td input:focus{border-color:var(--input-focus)}
 <body>
 <button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
 <div class="chart-area">
-  <div class="chart-title" contenteditable="true" spellcheck="false" onblur="syncTitle(this.innerText)">各城市季度销售额对比</div>
-  <div class="chart-subtitle">2024年Q1–Q4 · 单位：万元 · 核心洞察：北京全年领跑，Q4出现整体回升</div>
+  <div class="chart-title" contenteditable="true" spellcheck="false" onblur="syncTitle(this.innerText)">各城市年度销售额对比 · 同比增长分析</div>
+  <div class="chart-subtitle">2024年 vs 2023年 · 单位：万元 · 核心洞察：北京全年领跑并超越目标线，Q4整体回暖</div>
   <div id="chart"></div>
 </div>
 <div class="editor">
@@ -61,7 +61,9 @@ const THEMES = {
 };
 const DEFAULT_DATA = {
   labels:['北京','上海','广州','深圳','杭州','成都'],
-  values:[820,750,630,710,580,490]
+  values:[820,750,630,710,580,490],
+  prevValues:[672,624,528,590,482,410],
+  target:700
 };
 let DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let mode = 'dark';
@@ -70,25 +72,68 @@ window.addEventListener('resize', ()=>chart.resize());
 function buildOption(t){
   const maxVal = Math.max(...DATA.values);
   const minVal = Math.min(...DATA.values);
+  const avg = Math.round(DATA.values.reduce((a,b)=>a+b,0)/DATA.values.length);
+  const target = DATA.target || Math.round(avg * 1.15);
+  // YoY prev year data (simulate ~80% of current)
+  const prevValues = DATA.prevValues || DATA.values.map(v=>Math.round(v*0.82));
   return {
     backgroundColor:'transparent',
-    title:{show:false},
-    tooltip:{trigger:'axis',backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor},axisPointer:{type:'shadow'}},
-    grid:{left:60,right:20,top:20,bottom:40},
+    tooltip:{trigger:'axis',backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor},axisPointer:{type:'shadow'},
+      formatter:params=>{
+        const cur=params.find(p=>p.seriesName==='本年');
+        const prev=params.find(p=>p.seriesName==='去年');
+        if(!cur)return '';
+        const yoy=prev?((cur.value-prev.value)/prev.value*100).toFixed(1):'';
+        return `${cur.axisValue}<br/>本年：<b>${cur.value}万</b>${yoy?`<br/>同比：<b style="color:${cur.value>prev.value?t.positive:t.negative}">${cur.value>prev.value?'+':''}${yoy}%</b>`:''}${prev?`<br/>去年：${prev.value}万`:''}`;
+      }
+    },
+    legend:{data:['本年','去年'],right:60,top:4,textStyle:{color:t.labelColor},itemWidth:16,itemHeight:10},
+    grid:{left:60,right:20,top:36,bottom:40},
     xAxis:{type:'category',data:DATA.labels,axisLine:{lineStyle:{color:t.axisBorder}},axisLabel:{color:t.labelColor},axisTick:{show:false}},
-    yAxis:{type:'value',axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:t.split,type:'dashed'}},axisLabel:{color:t.labelColor,formatter:v=>v+'万'}},
-    series:[{
-      type:'bar',barMaxWidth:48,
-      data:DATA.values.map((v,i)=>({
-        value:v,
-        itemStyle:{
-          color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:v===maxVal?t.series[0]:(v===minVal?t.series[3]:t.series[0])},{offset:1,color:v===maxVal?t.series[0]+'88':(v===minVal?t.series[3]+'88':t.series[0]+'55')}]},
-          borderRadius:[4,4,0,0]
-        }
-      })),
-      markPoint:{data:[{type:'max',name:'最大值',label:{color:t.titleColor}},{type:'min',name:'最小值',label:{color:t.titleColor}}],symbol:'pin',symbolSize:40,itemStyle:{color:t.series[2]}},
-      label:{show:true,position:'top',color:t.labelColor,formatter:v=>v.value+'万'}
-    }]
+    yAxis:{type:'value',axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:t.split,type:'dashed'}},axisLabel:{color:t.labelColor,formatter:v=>v+'万'},min:v=>Math.floor(v.min*0.9/100)*100},
+    series:[
+      {
+        name:'本年',type:'bar',barMaxWidth:36,barGap:'20%',
+        data:DATA.values.map((v)=>({
+          value:v,
+          itemStyle:{
+            color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[
+              {offset:0,color:v===maxVal?t.series[0]:(v===minVal?t.series[3]:t.series[0])},
+              {offset:1,color:v===maxVal?t.series[0]+'66':(v===minVal?t.series[3]+'44':t.series[0]+'44')}
+            ]},
+            borderRadius:[4,4,0,0],
+            shadowBlur:v===maxVal?12:0,shadowColor:t.series[0]+'88'
+          }
+        })),
+        markPoint:{
+          data:[
+            {type:'max',name:'峰值',label:{color:'#fff',fontSize:11}},
+          ],
+          symbol:'roundRect',symbolSize:[52,28],symbolOffset:[0,-20],
+          itemStyle:{color:t.series[2],shadowBlur:10,shadowColor:t.series[2]+'88'}
+        },
+        markLine:{
+          silent:true,
+          data:[
+            {yAxis:target,name:'目标',lineStyle:{color:t.positive,width:2,type:'dashed'},
+             label:{formatter:`目标 ${target}万`,color:t.positive,position:'end',fontSize:11}},
+            {type:'average',name:'均值',lineStyle:{color:t.labelColor,width:1,type:'dotted'},
+             label:{formatter:params=>`均值 ${Math.round(params.value)}万`,color:t.labelColor,position:'insideEndBottom',fontSize:10}}
+          ],
+          symbol:['none','none']
+        },
+        label:{show:true,position:'top',color:t.labelColor,fontSize:11,formatter:v=>{
+          const yoy=((v.value-prevValues[v.dataIndex])/prevValues[v.dataIndex]*100).toFixed(0);
+          return v.value===maxVal?`{peak|${v.value}万\n+${yoy}%}`:`${v.value}万`;
+        },
+        rich:{peak:{color:t.series[0],fontWeight:'700',fontSize:12,lineHeight:18}}}
+      },
+      {
+        name:'去年',type:'bar',barMaxWidth:36,
+        data:prevValues.map(v=>({value:v,itemStyle:{color:t.labelColor+'55',borderRadius:[4,4,0,0]}})),
+        label:{show:false}
+      }
+    ]
   };
 }
 function renderTable(){

@@ -101,10 +101,10 @@ body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg)
   <div class="chart-viewer">
     <div class="empty-state" id="empty-state">
       <div class="empty-icon">📈</div>
-      <div class="empty-title">69种信息可视化图表</div>
+      <div class="empty-title">77种信息可视化图表</div>
       <div class="empty-sub">从左侧分类列表选择图表，支持数据实时编辑、双主题切换、全屏预览</div>
       <div class="stats-bar">
-        <div class="stat"><div class="stat-num">69</div><div class="stat-label">图表种类</div></div>
+        <div class="stat"><div class="stat-num">77</div><div class="stat-label">图表种类</div></div>
         <div class="stat"><div class="stat-num">10</div><div class="stat-label">语义分类</div></div>
         <div class="stat"><div class="stat-num">L5</div><div class="stat-label">品质等级</div></div>
       </div>
@@ -249,8 +249,9 @@ const CHARTS = [
         items: [
           {name:'统计卡片 KPI Card', file:'10-text-info/01-kpi-card.html', freq:'high'},
           {name:'仪表盘 Gauge Chart', file:'10-text-info/02-gauge.html', freq:'common'},
-          {name:'进度条 Progress Bar ✦新', file:'10-text-info/03-progress-bar.html', freq:'high'},
-          {name:'词云 Word Cloud ✦新', file:'10-text-info/04-word-cloud.html', freq:'common'},
+          {name:'进度条 Progress Bar', file:'10-text-info/03-progress-bar.html', freq:'high'},
+          {name:'词云 Word Cloud', file:'10-text-info/04-word-cloud.html', freq:'common'},
+          {name:'数据表格 Data Table ✦新', file:'10-text-info/10-data-table.html', freq:'high'},
         ]
       },
       {
@@ -258,17 +259,30 @@ const CHARTS = [
         name: '10-B 叙事时序 Narrative',
         items: [
           {name:'时间轴 Timeline', file:'06-flow/06-timeline.html', freq:'high'},
-          {name:'故事板 Storyboard ✦新', file:'10-text-info/09-storyboard.html', freq:'adv'},
+          {name:'故事板 Storyboard', file:'10-text-info/09-storyboard.html', freq:'adv'},
         ]
       },
       {
         key: '10C',
         name: '10-C 概念框架 Framework',
         items: [
-          {name:'SWOT矩阵 ✦新', file:'10-text-info/05-swot.html', freq:'high'},
-          {name:'商业画布 BMC ✦新', file:'10-text-info/06-business-canvas.html', freq:'high'},
-          {name:'金字塔模型 Pyramid ✦新', file:'10-text-info/07-pyramid.html', freq:'high'},
-          {name:'波特五力 Porter\'s 5F ✦新', file:'10-text-info/08-porter-five-forces.html', freq:'common'},
+          {name:'SWOT矩阵', file:'10-text-info/05-swot.html', freq:'high'},
+          {name:'商业画布 BMC', file:'10-text-info/06-business-canvas.html', freq:'high'},
+          {name:'金字塔模型 Pyramid', file:'10-text-info/07-pyramid.html', freq:'high'},
+          {name:'波特五力 Porter\'s 5F', file:'10-text-info/08-porter-five-forces.html', freq:'common'},
+          {name:'价值主张画布 VPC ✦新', file:'10-text-info/11-value-proposition-canvas.html', freq:'common'},
+          {name:'优先级矩阵 2×2 ✦新', file:'10-text-info/12-priority-matrix.html', freq:'high'},
+        ]
+      },
+      {
+        key: '10D',
+        name: '10-D 品牌战略 Brand & Strategy',
+        items: [
+          {name:'品牌屋 Brand House ✦新', file:'10-text-info/13-brand-house.html', freq:'special'},
+          {name:'品牌洋葱 Brand Onion ✦新', file:'10-text-info/14-brand-onion.html', freq:'special'},
+          {name:'品牌识别棱柱 Kapferer ✦新', file:'10-text-info/15-brand-prism.html', freq:'special'},
+          {name:'品牌定位图 Positioning Map ✦新', file:'10-text-info/16-brand-positioning-map.html', freq:'special'},
+          {name:'品牌架构图 Brand Architecture ✦新', file:'10-text-info/17-brand-architecture.html', freq:'special'},
         ]
       }
     ]

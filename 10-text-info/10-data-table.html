@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>数据表格 Data Table</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s;overflow:hidden}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF;--row-hover:#0D1828;--row-alt:#0A1020;--up:#30D986;--down:#FF6B6B;--warn:#FFB340;--ok:#30D986}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF;--row-hover:#EFF4FB;--row-alt:#F8FAFC;--up:#00B96B;--down:#F5222D;--warn:#FA8C16;--ok:#00B96B}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:20px;min-width:0;overflow:hidden}
+.chart-title{font-size:17px;font-weight:700;color:var(--title);margin-bottom:2px;outline:none}
+.chart-subtitle{font-size:12px;color:var(--label);margin-bottom:14px}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.search-box{flex:1;min-width:160px;max-width:260px;position:relative}
+.search-box input{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:6px 28px 6px 10px;border-radius:6px;font-size:12px;outline:none}
+.search-box input:focus{border-color:var(--input-focus)}
+.search-box::after{content:'🔍';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none}
+.filter-btns{display:flex;gap:4px;flex-wrap:wrap}
+.filter-btn{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--btn-sec);color:var(--label);cursor:pointer;transition:all .15s}
+.filter-btn.active{background:rgba(77,158,255,0.15);color:#4D9EFF;border-color:rgba(77,158,255,0.4)}
+.table-wrap{flex:1;overflow:auto;border-radius:10px;border:1px solid var(--border);background:var(--panel-bg)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--panel-bg);color:var(--label);font-size:11px;font-weight:700;letter-spacing:.3px;padding:10px 14px;text-align:left;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:2;white-space:nowrap;user-select:none;cursor:pointer}
+thead th:hover{color:var(--title)}
+thead th.sorted-asc::after{content:' ↑';color:#4D9EFF}
+thead th.sorted-desc::after{content:' ↓';color:#4D9EFF}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s;cursor:default}
+tbody tr:nth-child(even){background:var(--row-alt)}
+tbody tr:hover{background:var(--row-hover)}
+tbody tr.highlight{background:rgba(77,158,255,0.08)}
+td{padding:9px 14px;color:var(--text);vertical-align:middle}
+td.num{font-variant-numeric:tabular-nums;font-weight:600;color:var(--title);text-align:right}
+td.cat{font-weight:600;color:var(--title)}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-ok{background:rgba(48,217,134,0.15);color:var(--ok)}
+.badge-warn{background:rgba(255,179,64,0.15);color:var(--warn)}
+.badge-down{background:rgba(255,107,107,0.15);color:var(--down)}
+.delta{font-size:12px;font-weight:600}
+.delta.up::before{content:'▲ ';font-size:10px}
+.delta.down::before{content:'▼ ';font-size:10px}
+.delta.up{color:var(--up)}
+.delta.down{color:var(--down)}
+.mini-bar-wrap{width:80px;height:10px;background:var(--border);border-radius:5px;overflow:hidden;display:inline-block;vertical-align:middle}
+.mini-bar{height:100%;border-radius:5px;background:linear-gradient(90deg,#4D9EFF,#2B7FFF);transition:width .4s}
+.progress-cell{display:flex;align-items:center;gap:6px}
+.progress-pct{font-size:11px;color:var(--label);min-width:30px;text-align:right}
+.summary-row td{border-top:2px solid var(--border);font-weight:700;color:var(--title);background:var(--panel-bg)}
+.side-status{display:inline-block;width:4px;height:28px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.status-ok{background:var(--ok)}
+.status-warn{background:var(--warn)}
+.status-down{background:var(--down)}
+.pagination{display:flex;align-items:center;gap:6px;padding:10px 14px;border-top:1px solid var(--border);background:var(--panel-bg)}
+.pagination span{font-size:12px;color:var(--label);flex:1}
+.pg-btn{padding:4px 12px;border-radius:4px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;cursor:pointer}
+.pg-btn:hover{border-color:var(--input-focus);color:var(--input-focus)}
+.pg-btn:disabled{opacity:.4;cursor:default}
+.editor{width:260px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.editor-header{padding:14px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:3px}
+.editor-body{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+.field-group label{display:block;font-size:11px;font-weight:700;color:var(--label);margin-bottom:5px;letter-spacing:.3px}
+.field-group input,.field-group select{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:5px 8px;border-radius:4px;font-size:12px;outline:none;appearance:none}
+.field-group input:focus,.field-group select:focus{border-color:var(--input-focus)}
+.field-group select{cursor:pointer}
+.row-editor{display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--row-alt);border-radius:6px;border:1px solid var(--border)}
+.row-field{display:flex;align-items:center;gap:6px}
+.row-field label{font-size:11px;color:var(--label);min-width:40px}
+.row-field input{flex:1;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 7px;border-radius:4px;font-size:12px;outline:none}
+.row-field input:focus{border-color:var(--input-focus)}
+.action-row{display:flex;gap:6px;margin-top:4px}
+.action-btn{flex:1;padding:5px 0;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--btn-sec);color:var(--text)}
+.action-btn.add{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.action-btn.del{color:#FF6B6B;border-color:rgba(255,107,107,0.3)}
+.action-btn:hover{opacity:.85}
+.editor-footer{padding:10px 14px;display:flex;gap:8px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:6px 0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border)}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">品类销售看板 · 本周数据</div>
+  <div class="chart-subtitle">Data Table · 精确数值查询，多维度精细对比，支持排序/筛选/搜索</div>
+  <div class="toolbar">
+    <div class="search-box"><input id="search-input" placeholder="搜索品类..." oninput="filterTable()"></div>
+    <div class="filter-btns" id="filter-btns">
+      <button class="filter-btn active" onclick="setFilter('all',this)">全部</button>
+      <button class="filter-btn" onclick="setFilter('达标',this)">达标</button>
+      <button class="filter-btn" onclick="setFilter('观察',this)">观察</button>
+      <button class="filter-btn" onclick="setFilter('风险',this)">风险</button>
+      <button class="filter-btn" onclick="setFilter('预警',this)">预警</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table id="data-table">
+      <thead>
+        <tr>
+          <th onclick="sortBy('rank')">#</th>
+          <th onclick="sortBy('cat')">品类</th>
+          <th onclick="sortBy('sales')" style="text-align:right">销量</th>
+          <th onclick="sortBy('revenue')" style="text-align:right">收入(万)</th>
+          <th>进度</th>
+          <th onclick="sortBy('delta')">环比</th>
+          <th>状态</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="pagination">
+      <span id="page-info"></span>
+      <button class="pg-btn" id="btn-prev" onclick="changePage(-1)">← 上页</button>
+      <button class="pg-btn" id="btn-next" onclick="changePage(1)">下页 →</button>
+    </div>
+  </div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>表格编辑</h3><p>编辑行数据或添加新行</p></div>
+  <div class="editor-body">
+    <div class="field-group"><label>页面大小</label>
+      <select id="page-size" onchange="changePageSize()">
+        <option value="5">5条/页</option>
+        <option value="10" selected>10条/页</option>
+        <option value="20">20条/页</option>
+      </select>
+    </div>
+    <div class="row-editor">
+      <div class="row-field"><label>品类</label><input id="e-cat" placeholder="品类名称"></div>
+      <div class="row-field"><label>销量</label><input id="e-sales" type="number" placeholder="销量数"></div>
+      <div class="row-field"><label>收入</label><input id="e-rev" type="number" placeholder="收入万元"></div>
+      <div class="row-field"><label>目标</label><input id="e-target" type="number" placeholder="目标值"></div>
+      <div class="row-field"><label>环比%</label><input id="e-delta" type="number" step="0.1" placeholder="如 +12.5"></div>
+      <div class="row-field"><label>状态</label>
+        <select id="e-status" style="flex:1;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 7px;border-radius:4px;font-size:12px;outline:none">
+          <option>达标</option><option>观察</option><option>风险</option><option>预警</option>
+        </select>
+      </div>
+      <div class="action-row">
+        <button class="action-btn add" onclick="addRow()">+ 添加</button>
+        <button class="action-btn del" onclick="deleteRow()">- 删除末行</button>
+      </div>
+    </div>
+  </div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="renderTable()">✓ 刷新</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const DEFAULT = [
+  {cat:'电子产品',sales:2105,revenue:59.2,target:55,delta:12.0,status:'达标'},
+  {cat:'服装服饰',sales:1680,revenue:38.4,target:40,delta:3.2,status:'观察'},
+  {cat:'食品饮料',sales:1520,revenue:22.8,target:20,delta:8.5,status:'达标'},
+  {cat:'美妆护肤',sales:1240,revenue:31.5,target:30,delta:5.1,status:'达标'},
+  {cat:'家居家电',sales:892,revenue:26.5,target:28,delta:-1.3,status:'风险'},
+  {cat:'图书文具',sales:760,revenue:9.1,target:10,delta:-3.8,status:'风险'},
+  {cat:'体育户外',sales:638,revenue:14.2,target:18,delta:-7.4,status:'预警'},
+  {cat:'玩具母婴',sales:540,revenue:12.8,target:12,delta:2.1,status:'达标'},
+  {cat:'汽车用品',sales:430,revenue:11.3,target:15,delta:-8.9,status:'预警'},
+  {cat:'宠物用品',sales:385,revenue:8.6,target:8,delta:4.5,status:'达标'},
+  {cat:'珠宝首饰',sales:280,revenue:18.4,target:20,delta:-2.1,status:'观察'},
+  {cat:'数码配件',sales:1820,revenue:16.3,target:18,delta:6.7,status:'观察'},
+];
+let data = JSON.parse(JSON.stringify(DEFAULT));
+let filtered = [...data];
+let sortField = 'rank';
+let sortDir = 1;
+let currentFilter = 'all';
+let currentSearch = '';
+let page = 1;
+let pageSize = 10;
+
+function statusBadge(s){
+  const map={'达标':'badge-ok','观察':'badge-warn','风险':'badge-down','预警':'badge-down'};
+  return `<span class="badge ${map[s]||'badge-warn'}">${s}</span>`;
+}
+function sideBar(s){
+  const map={'达标':'status-ok','观察':'status-warn','风险':'status-down','预警':'status-down'};
+  return `<span class="side-status ${map[s]||''}"></span>`;
+}
+function miniBar(val,target){
+  const pct=Math.min(100,Math.round((val/target)*100));
+  return `<div class="progress-cell"><div class="mini-bar-wrap"><div class="mini-bar" style="width:${pct}%"></div></div><span class="progress-pct">${pct}%</span></div>`;
+}
+function deltaCell(d){
+  const cls=d>=0?'up':'down';
+  return `<span class="delta ${cls}">${d>=0?'+':''}${d.toFixed(1)}%</span>`;
+}
+
+function sortBy(field){
+  if(sortField===field) sortDir*=-1; else{sortField=field;sortDir=-1;}
+  document.querySelectorAll('thead th').forEach(th=>{th.className='';});
+  const headers=['rank','cat','sales','revenue',null,'delta',null];
+  const idx=headers.indexOf(field);
+  if(idx>=0){
+    const ths=document.querySelectorAll('thead th');
+    ths[idx].className=sortDir>0?'sorted-asc':'sorted-desc';
+  }
+  applyFilters();
+}
+
+function applyFilters(){
+  filtered=data.filter(r=>{
+    const matchF=currentFilter==='all'||r.status===currentFilter;
+    const matchS=r.cat.toLowerCase().includes(currentSearch.toLowerCase());
+    return matchF&&matchS;
+  });
+  if(sortField!=='rank'){
+    filtered.sort((a,b)=>{
+      const va=a[sortField],vb=b[sortField];
+      return typeof va==='string'?va.localeCompare(vb)*sortDir:(va-vb)*sortDir;
+    });
+  }
+  page=1;
+  renderTable();
+}
+
+function filterTable(){
+  currentSearch=document.getElementById('search-input').value;
+  applyFilters();
+}
+function setFilter(f,el){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+function changePageSize(){
+  pageSize=parseInt(document.getElementById('page-size').value);
+  page=1;renderTable();
+}
+function changePage(dir){
+  const total=Math.ceil(filtered.length/pageSize);
+  page=Math.max(1,Math.min(total,page+dir));
+  renderTable();
+}
+
+function renderTable(){
+  const total=Math.ceil(filtered.length/pageSize);
+  const start=(page-1)*pageSize;
+  const rows=filtered.slice(start,start+pageSize);
+  const totalRevenue=data.reduce((s,r)=>s+r.revenue,0);
+  const totalSales=data.reduce((s,r)=>s+r.sales,0);
+  let html='';
+  rows.forEach((r,i)=>{
+    const rank=start+i+1;
+    const topClass=rank===1?'highlight':'';
+    html+=`<tr class="${topClass}">
+      <td>${sideBar(r.status)}${rank}</td>
+      <td class="cat">${r.cat}${rank===1?' ⭐':''}</td>
+      <td class="num">${r.sales.toLocaleString()}</td>
+      <td class="num">¥${r.revenue.toFixed(1)}</td>
+      <td>${miniBar(r.revenue,r.target)}</td>
+      <td>${deltaCell(r.delta)}</td>
+      <td>${statusBadge(r.status)}</td>
+    </tr>`;
+  });
+  html+=`<tr class="summary-row">
+    <td colspan="2">合计 (${data.length}行)</td>
+    <td class="num">${totalSales.toLocaleString()}</td>
+    <td class="num">¥${totalRevenue.toFixed(1)}</td>
+    <td colspan="3" style="font-size:12px;color:var(--label)">更新: 今日 · 已排序</td>
+  </tr>`;
+  document.getElementById('table-body').innerHTML=html;
+  document.getElementById('page-info').textContent=`第${page}/${total||1}页，共${filtered.length}条`;
+  document.getElementById('btn-prev').disabled=page<=1;
+  document.getElementById('btn-next').disabled=page>=total||total===0;
+}
+
+function addRow(){
+  const r={
+    cat:document.getElementById('e-cat').value||'新品类',
+    sales:parseInt(document.getElementById('e-sales').value)||0,
+    revenue:parseFloat(document.getElementById('e-rev').value)||0,
+    target:parseFloat(document.getElementById('e-target').value)||10,
+    delta:parseFloat(document.getElementById('e-delta').value)||0,
+    status:document.getElementById('e-status').value
+  };
+  data.push(r);
+  applyFilters();
+  toast('已添加: '+r.cat);
+}
+function deleteRow(){
+  if(data.length){data.pop();applyFilters();toast('已删除末行');}
+}
+function resetData(){
+  data=JSON.parse(JSON.stringify(DEFAULT));
+  currentFilter='all';currentSearch='';sortField='rank';sortDir=1;
+  document.getElementById('search-input').value='';
+  document.querySelectorAll('.filter-btn').forEach((b,i)=>{b.classList.toggle('active',i===0);});
+  applyFilters();
+  toast('已重置');
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.opacity=1;
+  setTimeout(()=>t.style.opacity=0,2000);
+}
+function toggleTheme(){
+  const isLight=document.documentElement.classList.toggle('theme-light');
+  document.getElementById('theme-btn').textContent=isLight?'🌑 暗色':'☀️ 亮色';
+}
+window.addEventListener('message',e=>{
+  if(e.data?.type==='setTheme'){
+    const isLight=e.data.theme==='light';
+    document.documentElement.classList.toggle('theme-light',isLight);
+    document.getElementById('theme-btn').textContent=isLight?'🌑 暗色':'☀️ 亮色';
+  }
+});
+
+renderTable();
+</script>
+</body>
+</html>

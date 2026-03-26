@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>品牌识别棱柱 Kapferer Brand Prism</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s;overflow:hidden}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF;--c1:#FF6B6B;--c2:#FFB340;--c3:#4D9EFF;--c4:#30D986;--c5:#9B7FFF;--c6:#00D4D4}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF;--c1:#F5222D;--c2:#FA8C16;--c3:#2B7FFF;--c4:#00B96B;--c5:#7B52FF;--c6:#13C2C2}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:20px;min-width:0;overflow:hidden}
+.chart-title{font-size:17px;font-weight:700;color:var(--title);margin-bottom:2px;outline:none}
+.chart-subtitle{font-size:12px;color:var(--label);margin-bottom:14px}
+.prism-wrapper{flex:1;display:flex;gap:16px;min-height:0}
+.prism-diagram{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto;gap:8px;align-content:start;overflow-y:auto}
+/* 中间行：品牌标识 */
+.prism-center{grid-column:1/3;display:flex;align-items:center;justify-content:center;gap:12px;padding:10px}
+.brand-badge{padding:6px 24px;border-radius:24px;border:2px solid rgba(77,158,255,0.4);background:rgba(77,158,255,0.08);font-size:14px;font-weight:700;color:var(--c3)}
+.prism-arrow{font-size:18px;color:var(--label);opacity:.5}
+/* 各面卡片 */
+.face-card{border-radius:12px;padding:14px;border:1px solid;display:flex;flex-direction:column;gap:6px;transition:border-color .2s;cursor:default}
+.face-card:hover{border-color:var(--input-focus)!important}
+.f1{background:rgba(255,107,107,0.07);border-color:rgba(255,107,107,0.2)}
+.f2{background:rgba(255,179,64,0.07);border-color:rgba(255,179,64,0.2)}
+.f3{background:rgba(77,158,255,0.07);border-color:rgba(77,158,255,0.2)}
+.f4{background:rgba(48,217,134,0.07);border-color:rgba(48,217,134,0.2)}
+.f5{background:rgba(155,127,255,0.07);border-color:rgba(155,127,255,0.2)}
+.f6{background:rgba(0,212,212,0.07);border-color:rgba(0,212,212,0.2)}
+.face-header{display:flex;align-items:center;gap:8px}
+.face-tag{font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:20px}
+.f1 .face-tag{background:rgba(255,107,107,0.18);color:var(--c1)}
+.f2 .face-tag{background:rgba(255,179,64,0.18);color:var(--c2)}
+.f3 .face-tag{background:rgba(77,158,255,0.18);color:var(--c3)}
+.f4 .face-tag{background:rgba(48,217,134,0.18);color:var(--c4)}
+.f5 .face-tag{background:rgba(155,127,255,0.18);color:var(--c5)}
+.f6 .face-tag{background:rgba(0,212,212,0.18);color:var(--c6)}
+.face-name{font-size:14px;font-weight:700;color:var(--title)}
+.face-en{font-size:10px;color:var(--label);margin-bottom:2px}
+.face-desc{font-size:12px;color:var(--text);line-height:1.5}
+.face-items{display:flex;flex-direction:column;gap:3px}
+.face-item{display:flex;align-items:flex-start;gap=6px;font-size:11px;color:var(--text);line-height:1.4;gap:5px}
+.item-bullet{font-size:8px;color:var(--label);flex-shrink:0;margin-top:3px}
+/* 轴标签 */
+.axis-bar{display:flex;justify-content:space-between;padding:0 4px 8px;grid-column:1/3}
+.axis-item{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--label);font-weight:600}
+.axis-line{width:60px;height:2px;background:var(--border)}
+/* 编辑器 */
+.editor{width:260px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.editor-header{padding:14px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:3px}
+.editor-body{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:10px}
+.face-edit{border:1px solid var(--border);border-radius:6px;padding:8px}
+.face-edit-hdr{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.face-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.face-edit-name{font-size:11px;font-weight:700;color:var(--title)}
+.field-group{display:flex;flex-direction:column;gap:4px;margin-bottom:6px}
+.field-group label{font-size:10px;font-weight:700;color:var(--label);letter-spacing:.3px}
+.field-group textarea,.field-group input{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 7px;border-radius:4px;font-size:11px;outline:none;width:100%;resize:none}
+.field-group textarea:focus,.field-group input:focus{border-color:var(--input-focus)}
+.editor-footer{padding:10px 14px;display:flex;gap:8px;border-top:1px solid var(--border);flex-shrink:0}
+.btn{flex:1;padding:6px 0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border)}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">品牌识别棱柱 · Kapferer模型</div>
+  <div class="chart-subtitle">Brand Identity Prism · 六维识别分析框架 · 发送方←品牌→接收方</div>
+  <div class="prism-wrapper">
+    <div class="prism-diagram" id="prism-diagram"></div>
+  </div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>棱柱编辑</h3><p>填写六个维度内容</p></div>
+  <div class="editor-body" id="editor-body"></div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const FACES=[
+  {id:'f1',cn:'外表特征',en:'Physique',tag:'发送方·左',cls:'f1',color:'var(--c1)',
+   desc:'品牌核心物理特征和视觉标识',items:['标志性蓝色＋白色配色方案','极简几何图形设计语言','苹果式无衬线字体体系']},
+  {id:'f2',cn:'品牌个性',en:'Personality',tag:'发送方·右',cls:'f2',color:'var(--c2)',
+   desc:'品牌如同一个人的性格特征',items:['自信、前卫、专业','有温度却不失锋芒','创新驱动、细节苛求']},
+  {id:'f3',cn:'文化',en:'Culture',tag:'内在·左',cls:'f3',color:'var(--c3)',
+   desc:'品牌背后的价值观与组织文化',items:['科技改变生活的使命驱动','极致产品主义','以用户为中心的设计哲学']},
+  {id:'f4',cn:'关系',en:'Relationship',tag:'内在·右',cls:'f4',color:'var(--c4)',
+   desc:'品牌与消费者建立的关系类型',items:['导师与学习者','创作者与工具','社区与成员']},
+  {id:'f5',cn:'顾客自我投射',en:'Self-Image',tag:'接收方·左',cls:'f5',color:'var(--c5)',
+   desc:'目标用户对自我形象的投射',items:['我是走在时代前沿的创作者','我注重效率和品质','我是数字原住民']},
+  {id:'f6',cn:'顾客内化反映',en:'Reflection',tag:'接收方·右',cls:'f6',color:'var(--c6)',
+   desc:'品牌用户在外界眼中的形象',items:['使用这个品牌=懂技术、有品味','早期采纳者、意见领袖','专业、高效、有格调']},
+];
+
+const DEFAULT=JSON.parse(JSON.stringify(FACES));
+let state=JSON.parse(JSON.stringify(FACES));
+
+function render(){
+  const d=document.getElementById('prism-diagram');
+  // 轴标签行
+  let html=`<div class="axis-bar">
+    <div class="axis-item"><div class="axis-line"></div><span>发送方（品牌）</span></div>
+    <div class="axis-item" style="flex:1;align-items:center"><span>↔ 品牌认同</span></div>
+    <div class="axis-item"><div class="axis-line"></div><span>接收方（消费者）</span></div>
+  </div>`;
+  // 中间品牌标识
+  html+=`<div class="prism-center"><span class="prism-arrow">◀</span><span class="brand-badge" contenteditable="true" spellcheck="false" id="brand-name">AI创作助手品牌</span><span class="prism-arrow">▶</span></div>`;
+  // 六个面
+  state.forEach((f,i)=>{
+    const items=f.items.map(it=>`<div class="face-item"><span class="item-bullet">▪</span><span>${it}</span></div>`).join('');
+    html+=`<div class="face-card ${f.cls}">
+      <div class="face-header"><span class="face-tag">${f.tag}</span></div>
+      <div class="face-name">${f.cn}</div>
+      <div class="face-en">${f.en}</div>
+      <div class="face-desc">${f.desc}</div>
+      <div class="face-items">${items}</div>
+    </div>`;
+  });
+  d.innerHTML=html;
+}
+
+function buildEditor(){
+  document.getElementById('editor-body').innerHTML=state.map((f,i)=>`
+    <div class="face-edit">
+      <div class="face-edit-hdr"><div class="face-dot" style="background:${f.color}"></div><span class="face-edit-name">${f.cn} · ${f.en}</span></div>
+      <div class="field-group"><label>维度描述</label><textarea id="e-desc${i}" rows="2">${f.desc}</textarea></div>
+      <div class="field-group"><label>关键词（每行一条）</label><textarea id="e-items${i}" rows="3">${f.items.join('\n')}</textarea></div>
+    </div>`).join('');
+}
+
+function applyData(){
+  state.forEach((f,i)=>{
+    f.desc=document.getElementById('e-desc'+i).value;
+    f.items=document.getElementById('e-items'+i).value.split('\n').map(s=>s.trim()).filter(Boolean);
+  });
+  render();toast('已应用');
+}
+function resetData(){state=JSON.parse(JSON.stringify(DEFAULT));buildEditor();render();toast('已重置');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,2000);}
+function toggleTheme(){const isLight=document.documentElement.classList.toggle('theme-light');document.getElementById('theme-btn').textContent=isLight?'🌑 暗色':'☀️ 亮色';}
+window.addEventListener('message',e=>{if(e.data?.type==='setTheme'){const isLight=e.data.theme==='light';document.documentElement.classList.toggle('theme-light',isLight);document.getElementById('theme-btn').textContent=isLight?'🌑 暗色':'☀️ 亮色';}});
+buildEditor();render();
+</script>
+</body>
+</html>

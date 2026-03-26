@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>品牌屋 Brand House</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s;overflow:hidden}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF;--accent:#FFB340;--accent2:#4D9EFF;--roof:#FFB340;--pillar:#4D9EFF;--base:#30D986}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF;--accent:#FA8C16;--accent2:#1677FF;--roof:#FA8C16;--pillar:#1677FF;--base:#00B96B}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:20px;min-width:0;overflow:hidden}
+.chart-title{font-size:17px;font-weight:700;color:var(--title);margin-bottom:2px;outline:none}
+.chart-subtitle{font-size:12px;color:var(--label);margin-bottom:14px}
+.house-container{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0;overflow-y:auto}
+/* 屋顶：品牌愿景 */
+.layer-roof{background:linear-gradient(135deg,rgba(255,179,64,0.15),rgba(255,179,64,0.08));border:1px solid rgba(255,179,64,0.3);border-radius:16px 16px 8px 8px;padding:14px 20px;text-align:center;position:relative;overflow:hidden;flex-shrink:0}
+.layer-roof::before{content:'🏛️';position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:28px;opacity:.2}
+.layer-tag{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;display:block}
+.layer-roof .layer-tag{color:var(--roof)}
+.layer-name{font-size:16px;font-weight:700;color:var(--title);margin-bottom:3px}
+.layer-desc{font-size:12px;color:var(--text);line-height:1.5}
+/* 核心承诺 */
+.layer-promise{background:rgba(77,158,255,0.08);border:1px solid rgba(77,158,255,0.2);border-radius:8px;padding:12px 20px;text-align:center;flex-shrink:0}
+.layer-promise .layer-tag{color:var(--accent2)}
+/* 中间支柱区 */
+.pillars-section{display:flex;gap:8px;flex:1;min-height:0}
+.pillar-item{flex:1;background:rgba(77,158,255,0.06);border:1px solid rgba(77,158,255,0.15);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s;min-height:80px}
+.pillar-item:hover{border-color:rgba(77,158,255,0.4)}
+.pillar-num{font-size:10px;font-weight:700;color:var(--accent2);letter-spacing:.3px;text-transform:uppercase}
+.pillar-name{font-size:13px;font-weight:700;color:var(--title)}
+.pillar-desc{font-size:11px;color:var(--text);line-height:1.5;flex:1}
+/* 价值观 */
+.layer-values{background:rgba(155,127,255,0.06);border:1px solid rgba(155,127,255,0.15);border-radius:8px;padding:12px 20px;flex-shrink:0}
+.layer-values .layer-tag{color:#9B7FFF}
+.values-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.value-chip{padding:3px 10px;background:rgba(155,127,255,0.12);border:1px solid rgba(155,127,255,0.2);color:#9B7FFF;border-radius:20px;font-size:11px;font-weight:600}
+/* 地基：目标受众 */
+.layer-base{background:rgba(48,217,134,0.08);border:2px solid rgba(48,217,134,0.25);border-radius:8px 8px 16px 16px;padding:14px 20px;text-align:center;flex-shrink:0}
+.layer-base .layer-tag{color:var(--base)}
+.editor{width:260px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.editor-header{padding:14px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:3px}
+.editor-body{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:10px}
+.field-group{display:flex;flex-direction:column;gap:5px}
+.field-group label{font-size:11px;font-weight:700;color:var(--label);letter-spacing:.3px}
+.field-group input,.field-group textarea{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:5px 8px;border-radius:4px;font-size:12px;outline:none;width:100%;resize:none}
+.field-group input:focus,.field-group textarea:focus{border-color:var(--input-focus)}
+.section-divider{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--label);padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px}
+.pillar-fields{display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--row-alt,#0A1020);border-radius:6px;border:1px solid var(--border)}
+.pillar-header{font-size:11px;font-weight:700;color:var(--accent2);margin-bottom:4px}
+.editor-footer{padding:10px 14px;display:flex;gap:8px;border-top:1px solid var(--border);flex-shrink:0}
+.btn{flex:1;padding:6px 0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border)}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">品牌屋 · 品牌架构全要素</div>
+  <div class="chart-subtitle">Brand House · 愿景→使命→价值观→支柱→定位 · 建筑隐喻框架</div>
+  <div class="house-container" id="house-container"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>品牌屋编辑</h3><p>填写品牌各层要素</p></div>
+  <div class="editor-body" id="editor-body"></div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const DEFAULT={
+  vision:{name:'我们的品牌愿景',desc:'让每一个创作者都能用AI的力量放大自己的影响力'},
+  mission:'核心承诺：让创作更简单、传播更高效、价值更可见',
+  pillars:[
+    {num:'支柱1',name:'技术领先',desc:'持续投入前沿AI技术，保持产品差异化竞争优势'},
+    {num:'支柱2',name:'设计优雅',desc:'以极致用户体验为核心，让复杂功能触手可及'},
+    {num:'支柱3',name:'生态开放',desc:'构建创作者生态，连接工具与创作者与受众'},
+  ],
+  values:['创新','简洁','信任','赋能','开放'],
+  audience:{name:'目标受众 · 市场定位',desc:'面向内容创作者、设计师、产品经理，20-40岁数字原住民'}
+};
+let state=JSON.parse(JSON.stringify(DEFAULT));
+
+function render(){
+  const c=document.getElementById('house-container');
+  const pvs=state.pillars.map(p=>`<div class="pillar-item"><div class="pillar-num">${p.num}</div><div class="pillar-name">${p.name}</div><div class="pillar-desc">${p.desc}</div></div>`).join('');
+  const chips=state.values.map(v=>`<span class="value-chip">${v}</span>`).join('');
+  c.innerHTML=`
+    <div class="layer-roof"><span class="layer-tag">品牌愿景 · VISION</span><div class="layer-name">${state.vision.name}</div><div class="layer-desc">${state.vision.desc}</div></div>
+    <div class="layer-promise"><span class="layer-tag">品牌使命 · MISSION</span><div class="layer-desc" style="color:var(--title);font-weight:600">${state.mission}</div></div>
+    <div class="pillars-section">${pvs}</div>
+    <div class="layer-values"><span class="layer-tag">品牌价值观 · VALUES</span><div class="values-chips">${chips}</div></div>
+    <div class="layer-base"><span class="layer-tag">目标受众 · AUDIENCE</span><div class="layer-name" style="font-size:13px">${state.audience.name}</div><div class="layer-desc">${state.audience.desc}</div></div>
+  `;
+}
+
+function buildEditor(){
+  document.getElementById('editor-body').innerHTML=`
+    <div class="section-divider">🏔 品牌愿景</div>
+    <div class="field-group"><label>愿景标题</label><input id="e-vname" value="${state.vision.name}"></div>
+    <div class="field-group"><label>愿景描述</label><textarea id="e-vdesc" rows="2">${state.vision.desc}</textarea></div>
+    <div class="section-divider">💫 核心承诺</div>
+    <div class="field-group"><textarea id="e-mission" rows="2">${state.mission}</textarea></div>
+    <div class="section-divider">🏛 品牌支柱</div>
+    ${state.pillars.map((p,i)=>`<div class="pillar-fields"><div class="pillar-header">${p.num}</div><div class="field-group"><label>名称</label><input id="e-pname${i}" value="${p.name}"></div><div class="field-group"><label>描述</label><textarea id="e-pdesc${i}" rows="2">${p.desc}</textarea></div></div>`).join('')}
+    <div class="section-divider">💎 品牌价值观 (逗号分隔)</div>
+    <div class="field-group"><input id="e-values" value="${state.values.join('，')}"></div>
+    <div class="section-divider">🎯 目标受众</div>
+    <div class="field-group"><label>定位标题</label><input id="e-aname" value="${state.audience.name}"></div>
+    <div class="field-group"><label>受众描述</label><textarea id="e-adesc" rows="2">${state.audience.desc}</textarea></div>
+  `;
+}
+
+function applyData(){
+  state.vision.name=document.getElementById('e-vname').value;
+  state.vision.desc=document.getElementById('e-vdesc').value;
+  state.mission=document.getElementById('e-mission').value;
+  state.pillars.forEach((p,i)=>{p.name=document.getElementById('e-pname'+i).value;p.desc=document.getElementById('e-pdesc'+i).value;});
+  state.values=document.getElementById('e-values').value.split(/[，,]+/).map(s=>s.trim()).filter(Boolean);
+  state.audience.name=document.getElementById('e-aname').value;
+  state.audience.desc=document.getElementById('e-adesc').value;
+  render();toast('已应用');
+}
+function resetData(){state=JSON.parse(JSON.stringify(DEFAULT));buildEditor();render();toast('已重置');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,2000);}
+function toggleTheme(){const isLight=document.documentElement.classList.toggle('theme-light');document.getElementById('theme-btn').textContent=isLight?'🌑 暗色':'☀️ 亮色';}
+window.addEventListener('message',e=>{if(e.data?.type==='setTheme'){const isLight=e.data.theme==='light';document.documentElement.classList.toggle('theme-light',isLight);document.getElementById('theme-btn').textContent=isLight?'🌑 暗色':'☀️ 亮色';}});
+buildEditor();render();
+</script>
+</body>
+</html>

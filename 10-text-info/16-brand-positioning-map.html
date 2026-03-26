@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>品牌定位图 Brand Positioning Map</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s;overflow:hidden}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF;--self-color:#FFB340;--opportunity:#30D986}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF;--self-color:#FA8C16;--opportunity:#00B96B}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:20px;min-width:0;overflow:hidden}
+.chart-title{font-size:17px;font-weight:700;color:var(--title);margin-bottom:2px;outline:none}
+.chart-subtitle{font-size:12px;color:var(--label);margin-bottom:10px}
+.map-container{flex:1;display:flex;gap:16px;min-height:0}
+.map-area{flex:1;position:relative;min-width:0;min-height:0}
+canvas#pos-canvas{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:12px}
+.legend{width:200px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+.legend-title{font-size:11px;font-weight:700;color:var(--label);letter-spacing:.3px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.legend-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:all .15s}
+.legend-item:hover{border-color:var(--input-focus)}
+.legend-item.self{border-color:rgba(255,179,64,0.4);background:rgba(255,179,64,0.06)}
+.legend-item.opportunity{border-color:rgba(48,217,134,0.3);background:rgba(48,217,134,0.05)}
+.legend-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.legend-name{font-size:12px;font-weight:600;color:var(--title)}
+.legend-pos{font-size:10px;color:var(--label)}
+.editor{width:260px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.editor-header{padding:14px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:3px}
+.editor-body{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.axis-config{display:flex;flex-direction:column;gap:6px;padding:8px;background:#0A1020;border-radius:6px;border:1px solid var(--border)}
+.theme-light .axis-config{background:#F8FAFC}
+.axis-config label{font-size:10px;font-weight:700;color:var(--label);letter-spacing:.3px}
+.axis-config input{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 7px;border-radius:4px;font-size:11px;outline:none;width:100%}
+.axis-config input:focus{border-color:var(--input-focus)}
+.brand-list{display:flex;flex-direction:column;gap:6px}
+.brand-row{display:grid;grid-template-columns:1fr 40px 40px auto;gap:4px;align-items:center}
+.brand-row input{background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:11px;outline:none;width:100%}
+.brand-row input:focus{border-color:var(--input-focus)}
+.brand-row input[type=number]{text-align:center}
+.brand-row span{font-size:10px;color:var(--label);text-align:center}
+.del-btn{background:none;border:none;color:var(--label);cursor:pointer;font-size:13px;padding:0 2px}
+.del-btn:hover{color:#FF6B6B}
+.add-brand{width:100%;padding:5px;background:transparent;border:1px dashed var(--border);color:var(--label);border-radius:4px;cursor:pointer;font-size:11px}
+.add-brand:hover{border-color:var(--input-focus);color:var(--input-focus)}
+.section-hdr{font-size:10px;font-weight:700;color:var(--label);letter-spacing:.3px;padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px}
+.editor-footer{padding:10px 14px;display:flex;gap:8px;border-top:1px solid var(--border);flex-shrink:0}
+.btn{flex:1;padding:6px 0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border)}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">AI内容创作工具竞争定位图</div>
+  <div class="chart-subtitle">Brand Positioning Map · 两维度竞争格局可视化 · 绿区=机会区域 · ⭐=我们的定位</div>
+  <div class="map-container">
+    <div class="map-area">
+      <canvas id="pos-canvas"></canvas>
+    </div>
+    <div class="legend">
+      <div class="legend-title">品牌图例</div>
+      <div id="legend-list"></div>
+    </div>
+  </div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>定位图编辑</h3><p>设置坐标轴与品牌位置</p></div>
+  <div class="editor-body">
+    <div class="axis-config">
+      <label>X轴：左端标签</label><input id="e-xleft" value="大众">
+      <label>X轴：右端标签</label><input id="e-xright" value="高端">
+      <label>Y轴：上端标签</label><input id="e-ytop" value="创新">
+      <label>Y轴：下端标签</label><input id="e-ybottom" value="传统">
+    </div>
+    <div class="section-hdr">品牌数据（位置 0-10）</div>
+    <div class="brand-list" id="brand-editor"></div>
+    <button class="add-brand" onclick="addBrand()">+ 添加品牌</button>
+  </div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const COLORS=['#4D9EFF','#FF6B6B','#30D986','#9B7FFF','#00D4D4','#FF9F43','#A29BFE','#FD79A8'];
+const DEFAULT_BRANDS=[
+  {name:'我们',x:7.5,y:7.8,isSelf:true,isOpp:false},
+  {name:'ChatGPT',x:6.0,y:6.5,isSelf:false,isOpp:false},
+  {name:'Notion AI',x:5.5,y:5.0,isSelf:false,isOpp:false},
+  {name:'Jasper',x:8.5,y:5.5,isSelf:false,isOpp:false},
+  {name:'Copy.ai',x:7.0,y:4.5,isSelf:false,isOpp:false},
+  {name:'老牌工具',x:3.0,y:2.5,isSelf:false,isOpp:false},
+  {name:'机会区',x:9.0,y:9.0,isSelf:false,isOpp:true},
+];
+let brands=JSON.parse(JSON.stringify(DEFAULT_BRANDS));
+let axisLabels={xleft:'大众',xright:'高端',ytop:'创新',ybottom:'传统'};
+let isDark=true;
+
+function getThemeColors(){
+  return isDark
+    ?{bg:'#080C14',grid:'#1A2236',axis:'#2D3A50',text:'#5A6A84',opp:'rgba(48,217,134,0.08)',oppBorder:'rgba(48,217,134,0.25)'}
+    :{bg:'#F5F7FA',grid:'#E1E8F0',axis:'#C8D4E0',text:'#8A9BB0',opp:'rgba(0,185,107,0.07)',oppBorder:'rgba(0,185,107,0.25)'};
+}
+
+function drawMap(){
+  const canvas=document.getElementById('pos-canvas');
+  const rect=canvas.parentElement.getBoundingClientRect();
+  canvas.width=rect.width*window.devicePixelRatio;
+  canvas.height=rect.height*window.devicePixelRatio;
+  const W=canvas.width,H=canvas.height;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(window.devicePixelRatio,window.devicePixelRatio);
+  const w=rect.width,h=rect.height;
+  const P=40;
+  const tc=getThemeColors();
+
+  // BG
+  ctx.fillStyle=tc.bg;
+  ctx.fillRect(0,0,w,h);
+
+  // Opportunity zone (top-right quadrant highlight)
+  const oppX=w/2+P/2,oppY=P/2,oppW=w-P/2-oppX,oppH=h/2-P/2-P/2;
+  ctx.fillStyle=tc.opp;
+  ctx.strokeStyle=tc.oppBorder;
+  ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(oppX,oppY,oppW,oppH,8);ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(48,217,134,0.5)';ctx.font=`700 11px PingFang SC,sans-serif`;
+  ctx.textAlign='center';ctx.fillText('机会区域',oppX+oppW/2,oppY+18);
+
+  // Grid lines
+  ctx.strokeStyle=tc.grid;ctx.lineWidth=1;
+  for(let i=0;i<=10;i++){
+    const x=P+(w-2*P)*i/10;
+    const y=P+(h-2*P)*i/10;
+    ctx.setLineDash([2,4]);
+    ctx.beginPath();ctx.moveTo(x,P);ctx.lineTo(x,h-P);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(P,y);ctx.lineTo(w-P,y);ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Axes
+  ctx.strokeStyle=tc.axis;ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(P,h/2);ctx.lineTo(w-P,h/2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(w/2,P);ctx.lineTo(w/2,h-P);ctx.stroke();
+  // Axis arrowheads
+  ctx.fillStyle=tc.axis;
+  [[w-P,h/2,-1],[P,h/2,1],[w/2,P,0,1],[w/2,h-P,0,-1]].forEach(([ax,ay,dx,dy])=>{
+    ctx.beginPath();ctx.moveTo(ax,ay);
+    if(dx){ctx.lineTo(ax-dx*8,ay-4);ctx.lineTo(ax-dx*8,ay+4);}
+    else{ctx.lineTo(ax-4,ay-dy*8);ctx.lineTo(ax+4,ay-dy*8);}
+    ctx.closePath();ctx.fill();
+  });
+
+  // Axis labels
+  ctx.fillStyle=tc.text;ctx.font=`600 12px PingFang SC,sans-serif`;
+  ctx.textAlign='left';ctx.fillText(axisLabels.xleft,P+4,h/2-8);
+  ctx.textAlign='right';ctx.fillText(axisLabels.xright,w-P-4,h/2-8);
+  ctx.textAlign='center';
+  ctx.fillText(axisLabels.ytop,w/2,P+16);
+  ctx.fillText(axisLabels.ybottom,w/2,h-P-8);
+
+  // Brand dots
+  brands.forEach((b,i)=>{
+    const bx=P+(w-2*P)*b.x/10;
+    const by=h-P-(h-2*P)*b.y/10;
+    const color=b.isSelf?'#FFB340':(b.isOpp?'#30D986':COLORS[i%COLORS.length]);
+    const r=b.isSelf?10:7;
+
+    // Glow for self
+    if(b.isSelf||b.isOpp){
+      ctx.beginPath();ctx.arc(bx,by,r+8,0,Math.PI*2);
+      ctx.fillStyle=`${color}22`;ctx.fill();
+      ctx.beginPath();ctx.arc(bx,by,r+4,0,Math.PI*2);
+      ctx.fillStyle=`${color}44`;ctx.fill();
+    }
+    ctx.beginPath();ctx.arc(bx,by,r,0,Math.PI*2);
+    ctx.fillStyle=color;ctx.fill();
+    if(b.isSelf){
+      ctx.fillStyle='#000';ctx.font=`700 10px sans-serif`;
+      ctx.textAlign='center';ctx.fillText('⭐',bx,by+4);
+    }
+    // Label
+    ctx.font=b.isSelf?`700 12px PingFang SC,sans-serif`:`600 11px PingFang SC,sans-serif`;
+    ctx.fillStyle=b.isSelf?'#FFB340':(isDark?'#C8D4E8':'#2D3A4A');
+    ctx.textAlign=bx>w/2?'right':'left';
+    ctx.fillText(b.name,bx+(bx>w/2?-(r+4):(r+4)),by-2);
+  });
+}
+
+function buildLegend(){
+  const el=document.getElementById('legend-list');
+  el.innerHTML=brands.map((b,i)=>{
+    const color=b.isSelf?'#FFB340':(b.isOpp?'#30D986':COLORS[i%COLORS.length]);
+    const cls=b.isSelf?'self':(b.isOpp?'opportunity':'');
+    return `<div class="legend-item ${cls}">
+      <div class="legend-dot" style="background:${color}"></div>
+      <div><div class="legend-name">${b.isSelf?'⭐ ':''}${b.name}</div>
+      <div class="legend-pos">X:${b.x.toFixed(1)} Y:${b.y.toFixed(1)}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function buildEditor(){
+  document.getElementById('brand-editor').innerHTML=brands.map((b,i)=>`
+    <div class="brand-row">
+      <input id="e-bname${i}" value="${b.name}" placeholder="品牌">
+      <input id="e-bx${i}" type="number" min="0" max="10" step="0.5" value="${b.x}" title="X轴位置">
+      <input id="e-by${i}" type="number" min="0" max="10" step="0.5" value="${b.y}" title="Y轴位置">
+      <button class="del-btn" onclick="removeBrand(${i})">✕</button>
+    </div>`).join('')
+    +`<div style="display:flex;gap:4px;font-size:10px;color:var(--label);padding:2px 0"><span style="flex:1">品牌名</span><span style="width:40px;text-align:center">X位</span><span style="width:40px;text-align:center">Y位</span><span style="width:20px"></span></div>`;
+}
+
+function addBrand(){brands.push({name:'新品牌',x:5,y:5,isSelf:false,isOpp:false});buildEditor();drawMap();buildLegend();}
+function removeBrand(i){if(brands.length>1){brands.splice(i,1);buildEditor();drawMap();buildLegend();}}
+function applyData(){
+  axisLabels.xleft=document.getElementById('e-xleft').value;
+  axisLabels.xright=document.getElementById('e-xright').value;
+  axisLabels.ytop=document.getElementById('e-ytop').value;
+  axisLabels.ybottom=document.getElementById('e-ybottom').value;
+  brands.forEach((b,i)=>{
+    b.name=document.getElementById('e-bname'+i).value;
+    b.x=parseFloat(document.getElementById('e-bx'+i).value)||5;
+    b.y=parseFloat(document.getElementById('e-by'+i).value)||5;
+  });
+  drawMap();buildLegend();toast('已应用');
+}
+function resetData(){brands=JSON.parse(JSON.stringify(DEFAULT_BRANDS));axisLabels={xleft:'大众',xright:'高端',ytop:'创新',ybottom:'传统'};document.getElementById('e-xleft').value='大众';document.getElementById('e-xright').value='高端';document.getElementById('e-ytop').value='创新';document.getElementById('e-ybottom').value='传统';buildEditor();drawMap();buildLegend();toast('已重置');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,2000);}
+function toggleTheme(){const isLight=document.documentElement.classList.toggle('theme-light');isDark=!isLight;document.getElementById('theme-btn').textContent=isLight?'🌑 暗色':'☀️ 亮色';drawMap();}
+window.addEventListener('message',e=>{if(e.data?.type==='setTheme'){const isLight=e.data.theme==='light';document.documentElement.classList.toggle('theme-light',isLight);isDark=!isLight;document.getElementById('theme-btn').textContent=isLight?'🌑 暗色':'☀️ 亮色';drawMap();}});
+window.addEventListener('resize',()=>drawMap());
+buildEditor();drawMap();buildLegend();
+</script>
+</body>
+</html>

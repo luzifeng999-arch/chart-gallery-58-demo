@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>价值主张画布 Value Proposition Canvas</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s;overflow:hidden}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF;--c1:#4D9EFF;--c2:#30D986;--c3:#FF6B6B;--c4:#9B7FFF;--c5:#FFB340;--c6:#00D4D4}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF;--c1:#1677FF;--c2:#00B96B;--c3:#F5222D;--c4:#7B52FF;--c5:#FA8C16;--c6:#13C2C2}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:20px;min-width:0;overflow:hidden}
+.chart-title{font-size:17px;font-weight:700;color:var(--title);margin-bottom:2px;outline:none}
+.chart-subtitle{font-size:12px;color:var(--label);margin-bottom:14px}
+.vpc-container{flex:1;display:flex;gap:16px;min-height:0;align-items:stretch}
+/* 左侧：产品价值主张（方形） */
+.vpc-left{flex:1;display:flex;flex-direction:column;gap:8px}
+.vpc-section-title{font-size:11px;font-weight:700;letter-spacing:.5px;padding:5px 10px;border-radius:20px;display:inline-block;margin-bottom:6px}
+.vpc-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.vpc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.vpc-card{border-radius:12px;border:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:6px;overflow:hidden;transition:border-color .2s}
+.vpc-card:hover{border-color:var(--input-focus)}
+.card-title{font-size:13px;font-weight:700;color:var(--title)}
+.card-sub{font-size:11px;color:var(--label);margin-bottom:4px}
+.items-list{display:flex;flex-direction:column;gap:4px;overflow-y:auto;flex:1}
+.item-chip{display:flex;align-items:flex-start;gap:6px;font-size:12px;color:var(--text);line-height:1.5}
+.item-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.card-ps{background:rgba(77,158,255,0.06);border-color:rgba(77,158,255,0.2)}
+.card-pg{background:rgba(48,217,134,0.06);border-color:rgba(48,217,134,0.2)}
+.card-pp{background:rgba(255,179,64,0.06);border-color:rgba(255,179,64,0.2)}
+/* 中间：匹配箭头 */
+.vpc-middle{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;width:60px;flex-shrink:0}
+.match-arrows{display:flex;flex-direction:column;align-items:center;gap:6px}
+.arrow-line{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#4D9EFF}
+.match-label{font-size:9px;color:var(--label);text-align:center;line-height:1.4;letter-spacing:.3px}
+.match-fit{display:flex;flex-direction:column;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;border:2px solid;font-size:9px;font-weight:700;text-align:center;line-height:1.3}
+.fit-yes{border-color:#30D986;color:#30D986;background:rgba(48,217,134,0.1)}
+.fit-no{border-color:var(--border);color:var(--label)}
+/* 右侧：客户画像（圆形） */
+.vpc-right{flex:1;display:flex;flex-direction:column;gap:8px}
+.card-cj{background:rgba(155,127,255,0.06);border-color:rgba(155,127,255,0.2)}
+.card-cp{background:rgba(255,107,107,0.06);border-color:rgba(255,107,107,0.2)}
+.card-cg{background:rgba(0,212,212,0.06);border-color:rgba(0,212,212,0.2)}
+.editor{width:260px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.editor-header{padding:14px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:3px}
+.editor-body{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:10px}
+.block-section{border-bottom:1px solid var(--border);padding-bottom:10px}
+.block-section:last-child{border-bottom:none}
+.block-label{font-size:10px;font-weight:700;letter-spacing:.5px;margin-bottom:6px;padding:2px 6px;border-radius:4px;display:inline-block}
+.item-row{display:flex;gap:4px;margin-bottom:3px}
+.item-row input{flex:1;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 7px;border-radius:4px;font-size:11px;outline:none}
+.item-row input:focus{border-color:var(--input-focus)}
+.del-btn{background:none;border:none;color:var(--label);cursor:pointer;font-size:13px;padding:0 3px}
+.del-btn:hover{color:#FF6B6B}
+.add-item{width:100%;padding:4px;background:transparent;border:1px dashed var(--border);color:var(--label);border-radius:4px;cursor:pointer;font-size:11px;margin-top:2px}
+.add-item:hover{border-color:var(--input-focus);color:var(--input-focus)}
+.editor-footer{padding:10px 14px;display:flex;gap:8px;border-top:1px solid var(--border);flex-shrink:0}
+.btn{flex:1;padding:6px 0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border)}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">AI助手产品价值主张画布</div>
+  <div class="chart-subtitle">Value Proposition Canvas · 产品价值 ⟺ 客户需求 精准匹配分析</div>
+  <div class="vpc-container">
+    <!-- 左侧：产品价值主张 -->
+    <div class="vpc-left">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--c1);background:rgba(77,158,255,0.1);padding:5px 12px;border-radius:20px;width:fit-content">🎁 产品&amp;服务</div>
+      <div class="vpc-card card-pp" style="flex:1">
+        <div class="vpc-header">
+          <div class="vpc-icon" style="background:rgba(255,179,64,0.15);color:var(--c5)">⚡</div>
+          <div><div class="card-title">痛点化解</div><div class="card-sub">Pain Relievers</div></div>
+        </div>
+        <div class="items-list" id="list-pr"></div>
+      </div>
+      <div class="vpc-card card-pg" style="flex:1">
+        <div class="vpc-header">
+          <div class="vpc-icon" style="background:rgba(48,217,134,0.15);color:var(--c2)">🚀</div>
+          <div><div class="card-title">增益创造</div><div class="card-sub">Gain Creators</div></div>
+        </div>
+        <div class="items-list" id="list-gc"></div>
+      </div>
+      <div class="vpc-card card-ps" style="flex:1">
+        <div class="vpc-header">
+          <div class="vpc-icon" style="background:rgba(77,158,255,0.15);color:var(--c1)">📦</div>
+          <div><div class="card-title">产品&amp;服务</div><div class="card-sub">Products &amp; Services</div></div>
+        </div>
+        <div class="items-list" id="list-ps"></div>
+      </div>
+    </div>
+    <!-- 中间匹配 -->
+    <div class="vpc-middle">
+      <div class="match-arrows">
+        <div class="arrow-line">⟺</div>
+        <div class="match-label">PRODUCT-MARKET FIT</div>
+      </div>
+      <div class="match-fit fit-yes" id="fit-indicator">✓ 匹配</div>
+      <div class="match-label">点击评估</div>
+    </div>
+    <!-- 右侧：客户画像 -->
+    <div class="vpc-right">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--c4);background:rgba(155,127,255,0.1);padding:5px 12px;border-radius:20px;width:fit-content">👤 客户画像</div>
+      <div class="vpc-card card-cj" style="flex:1">
+        <div class="vpc-header">
+          <div class="vpc-icon" style="background:rgba(155,127,255,0.15);color:var(--c4)">✅</div>
+          <div><div class="card-title">客户任务</div><div class="card-sub">Customer Jobs</div></div>
+        </div>
+        <div class="items-list" id="list-cj"></div>
+      </div>
+      <div class="vpc-card card-cp" style="flex:1">
+        <div class="vpc-header">
+          <div class="vpc-icon" style="background:rgba(255,107,107,0.15);color:var(--c3)">😖</div>
+          <div><div class="card-title">客户痛点</div><div class="card-sub">Pains</div></div>
+        </div>
+        <div class="items-list" id="list-pains"></div>
+      </div>
+      <div class="vpc-card card-cg" style="flex:1">
+        <div class="vpc-header">
+          <div class="vpc-icon" style="background:rgba(0,212,212,0.15);color:var(--c6)">🎯</div>
+          <div><div class="card-title">客户收益</div><div class="card-sub">Gains</div></div>
+        </div>
+        <div class="items-list" id="list-gains"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>画布编辑</h3><p>编辑六大模块内容</p></div>
+  <div class="editor-body" id="editor-body"></div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const COLORS={pr:['var(--c5)','rgba(255,179,64,0.15)'],gc:['var(--c2)','rgba(48,217,134,0.15)'],ps:['var(--c1)','rgba(77,158,255,0.15)'],cj:['var(--c4)','rgba(155,127,255,0.15)'],pains:['var(--c3)','rgba(255,107,107,0.15)'],gains:['var(--c6)','rgba(0,212,212,0.15)']};
+const LABELS={pr:'⚡ 痛点化解',gc:'🚀 增益创造',ps:'📦 产品服务',cj:'✅ 客户任务',pains:'😖 客户痛点',gains:'🎯 客户收益'};
+
+const DEFAULT={
+  pr:['自动处理重复性任务','一键生成报告草稿','智能错误检测与修复'],
+  gc:['效率提升3-5倍','持续学习优化建议','团队协作无缝衔接'],
+  ps:['AI写作助手','代码自动补全','智能数据分析'],
+  cj:['快速完成文档撰写','分析复杂数据集','管理跨团队协作'],
+  pains:['文档撰写耗时过长','数据分析门槛过高','重复性工作占用大量精力'],
+  gains:['节省每天2小时以上','专注于创意与决策','降低工具学习成本']
+};
+let state=JSON.parse(JSON.stringify(DEFAULT));
+
+function renderLists(){
+  Object.keys(state).forEach(k=>{
+    const el=document.getElementById('list-'+k);
+    if(!el)return;
+    const [c]=COLORS[k];
+    el.innerHTML=state[k].map(t=>`<div class="item-chip"><div class="item-dot" style="background:${c}"></div><span>${t}</span></div>`).join('');
+  });
+}
+function buildEditor(){
+  const eb=document.getElementById('editor-body');
+  eb.innerHTML=Object.keys(state).map(k=>{
+    const [c,bg]=COLORS[k];
+    const rows=state[k].map((t,i)=>`<div class="item-row"><input value="${t}" oninput="state['${k}'][${i}]=this.value"><button class="del-btn" onclick="removeItem('${k}',${i})">✕</button></div>`).join('');
+    return `<div class="block-section"><div class="block-label" style="color:${c};background:${bg}">${LABELS[k]}</div>${rows}<button class="add-item" onclick="addItem('${k}')">+ 添加</button></div>`;
+  }).join('');
+}
+function addItem(k){state[k].push('');buildEditor();renderLists();}
+function removeItem(k,i){state[k].splice(i,1);buildEditor();renderLists();}
+function applyData(){renderLists();toast('已应用');}
+function resetData(){state=JSON.parse(JSON.stringify(DEFAULT));buildEditor();renderLists();toast('已重置');}
+
+document.getElementById('fit-indicator').addEventListener('click',()=>{
+  const fi=document.getElementById('fit-indicator');
+  const isFit=fi.classList.toggle('fit-yes');
+  fi.classList.toggle('fit-no',!isFit);
+  fi.textContent=isFit?'✓ 匹配':'✗ 待优化';
+});
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,2000);}
+function toggleTheme(){
+  const isLight=document.documentElement.classList.toggle('theme-light');
+  document.getElementById('theme-btn').textContent=isLight?'🌑 暗色':'☀️ 亮色';
+}
+window.addEventListener('message',e=>{
+  if(e.data?.type==='setTheme'){
+    const isLight=e.data.theme==='light';
+    document.documentElement.classList.toggle('theme-light',isLight);
+    document.getElementById('theme-btn').textContent=isLight?'🌑 暗色':'☀️ 亮色';
+  }
+});
+buildEditor();renderLists();
+</script>
+</body>
+</html>
