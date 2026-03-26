@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>旭日图 Sunburst</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);font-family:'PingFang SC',sans-serif;display:flex;height:100vh;transition:background .3s}:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-sec:#1A2236}.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-sec:#F0F4FA}.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}.chart-title{font-size:18px;font-weight:700;color:var(--title);margin-bottom:4px}.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}#chart{flex:1}.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}.editor-header p{font-size:12px;color:var(--label);margin-top:4px}.editor-body{flex:1;overflow-y:auto;padding:16px;font-size:12px;color:var(--label);line-height:1.8}.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border)}.btn-apply{background:#238636;color:#fff;border-color:#238636}.btn-reset{background:var(--btn-sec);color:var(--text)}#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}</style></head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title">科技公司收入层级构成（旭日图）</div>
+  <div class="chart-subtitle">由内向外：业务线→产品→收入占比 · 点击内圈下钻，双击回退</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>图表说明</h3><p>多层级构成可视化</p></div>
+  <div class="editor-body">旭日图（Sunburst）展示多层级构成：<br><br>
+    • <b>最内圈</b>：顶层分类（业务线）<br>
+    • <b>中间圈</b>：二级分类（产品线）<br>
+    • <b>最外圈</b>：三级细节<br><br>
+    扇形面积代表占比大小，颜色继承父节点色系，由内向外渐变。<br><br>
+    <b>交互：</b>点击扇区下钻聚焦，双击回退上一层。
+  </div>
+  <div class="editor-footer"><button class="btn btn-reset" onclick="resetData()">↺ 重置</button><button class="btn btn-apply" onclick="applyData()">✓ 应用</button></div>
+</div>
+<div id="toast"></div>
+<script>
+const T={dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',titleColor:'#F0F4FF',textColor:'#C8D4E8',labelColor:'#5A6A84',s:['#4D9EFF','#30D986','#FFB340','#9B7FFF','#FF8C42','#00D4D4'],btnSec:'#1A2236'},light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',titleColor:'#0D1525',textColor:'#2D3A4A',labelColor:'#8A9BB0',s:['#2B7FFF','#00B96B','#FA8C16','#722ED1','#F97316','#0891B2'],btnSec:'#F0F4FA'}};
+let mode='dark';
+const chart=echarts.init(document.getElementById('chart'));
+window.addEventListener('resize',()=>chart.resize());
+function buildData(t){return[{name:'云服务',value:400,itemStyle:{color:t.s[0]},children:[{name:'计算',value:180,children:[{name:'ECS',value:100},{name:'容器',value:80}]},{name:'存储',value:130,children:[{name:'对象存储',value:80},{name:'数据库',value:50}]},{name:'AI服务',value:90,children:[{name:'NLP',value:50},{name:'视觉',value:40}]}]},{name:'广告',value:320,itemStyle:{color:t.s[1]},children:[{name:'搜索广告',value:200,children:[{name:'品牌词',value:120},{name:'通用词',value:80}]},{name:'展示广告',value:120,children:[{name:'信息流',value:80},{name:'开屏',value:40}]}]},{name:'电商',value:280,itemStyle:{color:t.s[2]},children:[{name:'自营',value:160,children:[{name:'3C',value:90},{name:'服饰',value:70}]},{name:'平台佣金',value:120,children:[{name:'大商家',value:80},{name:'中小商家',value:40}]}]}];}
+function buildOption(t){return{backgroundColor:'transparent',tooltip:{trigger:'item',formatter:p=>`${p.treePathInfo.map(n=>n.name).join(' > ')}<br/>占比：${p.percent?p.percent.toFixed(1)+'%':''}`,backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor}},series:[{type:'sunburst',data:buildData(t),radius:['15%','85%'],sort:null,emphasis:{focus:'ancestor'},label:{color:t.textColor,fontSize:11},itemStyle:{borderColor:t.bg,borderWidth:2}}]};}
+function applyData(){chart.setOption(buildOption(T[mode]),true);showToast('✓ 已更新');}
+function resetData(){chart.setOption(buildOption(T[mode]),true);showToast('↺ 已重置');}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',1800);}
+function applyTheme(m){const t=T[m];document.documentElement.className=m==='light'?'theme-light':'';document.querySelector('.editor').style.background=t.panelBg;document.querySelector('.editor').style.borderColor=t.border;const btn=document.getElementById('theme-btn');btn.style.background=t.btnSec;btn.style.color=t.textColor;btn.style.borderColor=t.border;chart.setOption(buildOption(t),true);}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);document.getElementById('theme-btn').textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+applyTheme('dark');
+</script></body></html>

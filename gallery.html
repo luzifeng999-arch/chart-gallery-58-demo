@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>58种信息可视化图表完整图库 - Chart Gallery</title>
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #080C14;
+  --panel-bg: #0E1420;
+  --border: #1A2236;
+  --title: #F0F4FF;
+  --text: #C8D4E8;
+  --label: #5A6A84;
+  --primary: #4D9EFF;
+  --hover: #1A2236;
+}
+
+.theme-light {
+  --bg: #F5F7FA;
+  --panel-bg: #FFFFFF;
+  --border: #E1E8F0;
+  --title: #0D1525;
+  --text: #2D3A4A;
+  --label: #8A9BB0;
+  --primary: #2B7FFF;
+  --hover: #F0F4FA;
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.3s, color 0.3s;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 左侧导航 */
+.sidebar {
+  width: 280px;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sidebar-header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--title);
+  margin-bottom: 6px;
+}
+
+.sidebar-header p {
+  font-size: 12px;
+  color: var(--label);
+  line-height: 1.6;
+}
+
+.search-box {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+}
+
+.search-box input:focus {
+  border-color: var(--primary);
+}
+
+.chart-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+}
+
+.category {
+  margin-bottom: 8px;
+}
+
+.category-title {
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--label);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-title:hover {
+  color: var(--primary);
+}
+
+.category-icon {
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.category.collapsed .category-icon {
+  transform: rotate(-90deg);
+}
+
+.category-items {
+  padding: 0 12px;
+  max-height: 1000px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.category.collapsed .category-items {
+  max-height: 0;
+}
+
+.chart-item {
+  padding: 10px 12px;
+  margin: 2px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-item:hover {
+  background: var(--hover);
+}
+
+.chart-item.active {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.chart-number {
+  font-size: 11px;
+  opacity: 0.6;
+  min-width: 24px;
+}
+
+/* 主内容区 */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.top-bar {
+  padding: 16px 24px;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--label);
+}
+
+.breadcrumb-current {
+  color: var(--title);
+  font-weight: 600;
+}
+
+.top-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: var(--hover);
+  border-color: var(--primary);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* Iframe 容器 */
+.chart-viewer {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-viewer iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--bg);
+}
+
+/* 隐藏iframe内图表的主题切换按钮（通过iframe加载时） */
+.chart-viewer iframe {
+  /* CSS无法直接隐藏iframe内元素，需通过JS注入样式或postMessage */
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--label);
+  font-size: 14px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--label);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 240px;
+  }
+  
+  .top-bar {
+    padding: 12px 16px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h1>📊 信息可视化图表库</h1>
+    <p>10大类别 · 58种图型 · 点击切换查看</p>
+  </div>
+  
+  <div class="search-box">
+    <input type="text" id="search-input" placeholder="🔍 搜索图表类型...">
+  </div>
+  
+  <div class="chart-list" id="chart-list">
+    <!-- JavaScript 动态生成 -->
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="top-bar">
+    <div class="breadcrumb">
+      <span>图表库</span>
+      <span>›</span>
+      <span class="breadcrumb-current" id="current-chart">请选择图表</span>
+    </div>
+    <div class="top-actions">
+      <button class="btn" onclick="toggleTheme()" id="theme-toggle">🌙 亮色模式</button>
+      <button class="btn" onclick="openInNewTab()">↗ 新窗口打开</button>
+      <button class="btn btn-primary" onclick="toggleFullscreen()">⛶ 全屏</button>
+    </div>
+  </div>
+  
+  <div class="chart-viewer">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">📈</div>
+      <div>从左侧列表选择一个图表开始浏览</div>
+    </div>
+    <iframe id="chart-iframe" style="display:none"></iframe>
+  </div>
+</div>
+
+<script>
+const CHARTS = {
+  '01-comparison': {
+    name: '比较类 Comparison',
+    icon: '📊',
+    charts: [
+      {name: '柱状图 Bar Chart', file: '01-bar-chart.html'},
+      {name: '条形图 Horizontal Bar', file: '02-horizontal-bar.html'},
+      {name: '分组柱状图 Grouped Bar', file: '03-grouped-bar.html'},
+      {name: '雷达图 Radar', file: '04-radar.html'},
+      {name: '热力矩阵 Heatmap Matrix', file: '05-heatmap-matrix.html'},
+      {name: '子弹图 Bullet Chart', file: '06-bullet-chart.html'},
+      {name: '哑铃图 Dumbbell', file: '07-dumbbell.html'},
+      {name: '斜率图 Slope Chart', file: '08-slope-chart.html'}
+    ]
+  },
+  '02-trend': {
+    name: '趋势类 Trend',
+    icon: '📈',
+    charts: [
+      {name: '折线图 Line Chart', file: '01-line-chart.html'},
+      {name: '面积图 Area Chart', file: '02-area-chart.html'},
+      {name: '堆叠面积图 Stacked Area', file: '03-stacked-area.html'},
+      {name: '阶梯图 Step Chart', file: '04-step-chart.html'},
+      {name: '蜡烛图 Candlestick', file: '05-candlestick.html'},
+      {name: '甘特图 Gantt', file: '06-gantt.html'},
+      {name: '流图 Stream Graph', file: '07-stream-graph.html'}
+    ]
+  },
+  '03-composition': {
+    name: '构成类 Composition',
+    icon: '🥧',
+    charts: [
+      {name: '饼图 Pie', file: '01-pie.html'},
+      {name: '环图 Donut', file: '02-donut.html'},
+      {name: '堆叠柱状图 Stacked Bar', file: '03-stacked-bar.html'},
+      {name: '旭日图 Sunburst', file: '04-sunburst.html'},
+      {name: '矩形树图 Treemap', file: '05-treemap.html'},
+      {name: '瀑布图 Waterfall', file: '06-waterfall.html'},
+      {name: '百分比堆叠 100% Stacked', file: '07-100pct-stacked.html'}
+    ]
+  },
+  '04-distribution': {
+    name: '分布类 Distribution',
+    icon: '📉',
+    charts: [
+      {name: '直方图 Histogram', file: '01-histogram.html'},
+      {name: '散点图 Scatter', file: '02-scatter.html'},
+      {name: '箱线图 Box Plot', file: '03-boxplot.html'},
+      {name: '气泡图 Bubble', file: '04-bubble.html'},
+      {name: '小提琴图 Violin', file: '05-violin.html'},
+      {name: '热力日历 Heatmap Calendar', file: '06-heatmap-calendar.html'},
+      {name: '平行坐标 Parallel Coords', file: '07-parallel-coords.html'}
+    ]
+  },
+  '05-relationship': {
+    name: '关系类 Relationship',
+    icon: '🔗',
+    charts: [
+      {name: '相关矩阵 Correlation Matrix', file: '01-correlation-matrix.html'},
+      {name: '弦图 Chord', file: '02-chord.html'},
+      {name: '散点矩阵 Scatter Matrix', file: '03-scatter-matrix.html'},
+      {name: '邻接矩阵 Adjacency Matrix', file: '04-adjacency-matrix.html'}
+    ]
+  },
+  '06-flow': {
+    name: '流动类 Flow',
+    icon: '🌊',
+    charts: [
+      {name: '桑基图 Sankey', file: '01-sankey.html'},
+      {name: '漏斗图 Funnel', file: '02-funnel.html'},
+      {name: '流程图 Flowchart', file: '03-flowchart.html'},
+      {name: '力导向图 Force Graph', file: '04-force-graph.html'},
+      {name: '旅程地图 Journey Map', file: '05-journey-map.html'},
+      {name: '时间轴 Timeline', file: '06-timeline.html'}
+    ]
+  },
+  '07-geo': {
+    name: '地理类 Geographic',
+    icon: '🗺️',
+    charts: [
+      {name: '填色地图 Choropleth', file: '01-choropleth.html'},
+      {name: '气泡地图 Bubble Map', file: '02-bubble-map.html'},
+      {name: '地理热力图 Heatmap Geo', file: '03-heatmap-geo.html'},
+      {name: '流向地图 Flow Map', file: '04-flow-map.html'},
+      {name: '点密度图 Dot Density', file: '05-dot-density.html'}
+    ]
+  },
+  '08-hierarchy': {
+    name: '层级类 Hierarchy',
+    icon: '🌳',
+    charts: [
+      {name: '树图 Tree', file: '01-tree.html'},
+      {name: '思维导图 Mind Map', file: '02-mindmap.html'},
+      {name: '组织架构图 Org Chart', file: '03-org-chart.html'},
+      {name: '冰柱图 Icicle', file: '04-icicle.html'},
+      {name: '径向树 Radial Tree', file: '05-radial-tree.html'}
+    ]
+  },
+  '09-network': {
+    name: '网络类 Network',
+    icon: '🕸️',
+    charts: [
+      {name: '弧图 Arc Diagram', file: '01-arc-diagram.html'},
+      {name: '网络邻接矩阵 Adjacency Matrix', file: '02-adjacency-matrix-network.html'},
+      {name: '力导向网络 Force Directed', file: '03-force-directed.html'},
+      {name: '知识图谱 Knowledge Graph', file: '04-knowledge-graph.html'}
+    ]
+  },
+  '10-text-info': {
+    name: '文本信息类 Text/Info',
+    icon: '📄',
+    charts: [
+      {name: 'KPI卡片 KPI Card', file: '01-kpi-card.html'},
+      {name: '仪表盘 Gauge', file: '02-gauge.html'}
+    ]
+  }
+};
+
+let currentChart = null;
+let currentTheme = 'dark';
+
+// 渲染图表列表
+function renderChartList() {
+  const listEl = document.getElementById('chart-list');
+  let html = '';
+  let chartIndex = 1;
+  
+  Object.entries(CHARTS).forEach(([categoryKey, category]) => {
+    html += `
+      <div class="category" data-category="${categoryKey}">
+        <div class="category-title" onclick="toggleCategory('${categoryKey}')">
+          <span class="category-icon">▼</span>
+          <span>${category.icon} ${category.name}</span>
+        </div>
+        <div class="category-items">
+    `;
+    
+    category.charts.forEach(chart => {
+      html += `
+        <div class="chart-item" onclick="loadChart('${categoryKey}', '${chart.file}', '${chart.name}')" data-search="${chart.name.toLowerCase()}">
+          <span class="chart-number">${chartIndex++}</span>
+          <span>${chart.name}</span>
+        </div>
+      `;
+    });
+    
+    html += `
+        </div>
+      </div>
+    `;
+  });
+  
+  listEl.innerHTML = html;
+}
+
+// 切换分类折叠
+function toggleCategory(categoryKey) {
+  const categoryEl = document.querySelector(`[data-category="${categoryKey}"]`);
+  categoryEl.classList.toggle('collapsed');
+}
+
+// 加载图表
+function loadChart(categoryKey, filename, name) {
+  const iframe = document.getElementById('chart-iframe');
+  const emptyState = document.getElementById('empty-state');
+  
+  // 移除之前的 active 状态
+  document.querySelectorAll('.chart-item').forEach(el => el.classList.remove('active'));
+  
+  // 添加当前 active 状态
+  event.currentTarget.classList.add('active');
+  
+  // 更新面包屑
+  document.getElementById('current-chart').textContent = name;
+  
+  // 加载 iframe
+  iframe.src = `./${categoryKey}/${filename}`;
+  iframe.style.display = 'block';
+  emptyState.style.display = 'none';
+  
+  currentChart = `./${categoryKey}/${filename}`;
+  
+  // 等待iframe加载完成后隐藏其主题按钮并同步主题
+  iframe.onload = function() {
+    try {
+      // 获取iframe文档
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      
+      // 方法1: 直接隐藏按钮
+      const themeBtn = iframeDoc.getElementById('theme-btn');
+      if (themeBtn) {
+        themeBtn.style.display = 'none';
+      }
+      
+      // 方法2: 注入CSS样式（更可靠）
+      const style = iframeDoc.createElement('style');
+      style.textContent = '#theme-btn { display: none !important; }';
+      iframeDoc.head.appendChild(style);
+      
+      // 同步当前主题
+      if (currentTheme === 'light') {
+        iframeDoc.documentElement.classList.add('theme-light');
+      } else {
+        iframeDoc.documentElement.classList.remove('theme-light');
+      }
+    } catch (e) {
+      // 跨域情况下无法访问iframe内容，忽略错误
+      console.error('无法访问iframe内容:', e);
+    }
+  };
+}
+
+// 搜索功能
+document.getElementById('search-input').addEventListener('input', (e) => {
+  const keyword = e.target.value.toLowerCase();
+  document.querySelectorAll('.chart-item').forEach(item => {
+    const searchText = item.getAttribute('data-search');
+    if (searchText.includes(keyword)) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+});
+
+// 新窗口打开
+function openInNewTab() {
+  if (currentChart) {
+    window.open(currentChart, '_blank');
+  } else {
+    alert('请先选择一个图表');
+  }
+}
+
+// 全屏切换
+function toggleFullscreen() {
+  const iframe = document.getElementById('chart-iframe');
+  if (iframe.style.display === 'none') {
+    alert('请先选择一个图表');
+    return;
+  }
+  
+  if (!document.fullscreenElement) {
+    iframe.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+// 主题切换
+function toggleTheme() {
+  const iframe = document.getElementById('chart-iframe');
+  
+  if (currentTheme === 'dark') {
+    document.documentElement.classList.add('theme-light');
+    document.getElementById('theme-toggle').textContent = '🌙 暗色模式';
+    currentTheme = 'light';
+  } else {
+    document.documentElement.classList.remove('theme-light');
+    document.getElementById('theme-toggle').textContent = '☀️ 亮色模式';
+    currentTheme = 'dark';
+  }
+  
+  // 同步iframe内图表的主题
+  try {
+    if (iframe.style.display !== 'none' && iframe.src) {
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      if (iframeDoc) {
+        if (currentTheme === 'light') {
+          iframeDoc.documentElement.classList.add('theme-light');
+        } else {
+          iframeDoc.documentElement.classList.remove('theme-light');
+        }
+      }
+    }
+  } catch (e) {
+    // 跨域情况下无法访问iframe内容，忽略错误
+    console.error('无法同步iframe主题:', e);
+  }
+}
+
+// 初始化
+renderChartList();
+</script>
+
+</body>
+</html>

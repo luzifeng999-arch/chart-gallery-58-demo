@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>流程图 Flowchart</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);font-family:'PingFang SC',sans-serif;display:flex;height:100vh;transition:background .3s}:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-sec:#1A2236}.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-sec:#F0F4FA}.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0;overflow:auto}.chart-title{font-size:18px;font-weight:700;color:var(--title);margin-bottom:4px}.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}#canvas-wrap{flex:1;position:relative}svg{width:100%;height:100%}.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}.editor-header p{font-size:12px;color:var(--label);margin-top:4px}.editor-body{flex:1;overflow-y:auto;padding:16px;font-size:12px;color:var(--label);line-height:1.8}.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border)}.btn-apply{background:#238636;color:#fff;border-color:#238636}.btn-reset{background:var(--btn-sec);color:var(--text)}#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}</style></head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title">用户注册流程图</div>
+  <div class="chart-subtitle">矩形=流程步骤 · 菱形=决策节点 · 圆角矩形=开始/结束 · 箭头=流向</div>
+  <div id="canvas-wrap"><svg id="flow-svg" viewBox="0 0 700 520" xmlns="http://www.w3.org/2000/svg"></svg></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>图表说明</h3><p>流程图节点类型</p></div>
+  <div class="editor-body">
+    <b>节点形状含义：</b><br><br>
+    ● 圆角矩形 = 开始/结束<br>
+    ■ 矩形 = 流程步骤/操作<br>
+    ◆ 菱形 = 判断/决策节点<br>
+    → 箭头 = 流向/连接线<br><br>
+    <b>配色规则：</b><br>
+    <span style="color:#4D9EFF">■</span> 蓝色 = 用户操作<br>
+    <span style="color:#30D986">■</span> 绿色 = 系统处理<br>
+    <span style="color:#FFB340">■</span> 橙色 = 决策判断<br>
+    <span style="color:#FF6B6B">■</span> 红色 = 错误/失败路径<br><br>
+    此图使用 SVG 原生绘制，无需依赖额外库。
+  </div>
+  <div class="editor-footer"><button class="btn btn-reset" onclick="render()">↺ 刷新</button><button class="btn btn-apply" onclick="toggleTheme()">🌓 切换主题</button></div>
+</div>
+<div id="toast"></div>
+<script>
+const T={dark:{bg:'#080C14',panel:'#0E1420',border:'#1A2236',text:'#C8D4E8',label:'#5A6A84',user:'#4D9EFF',system:'#30D986',decision:'#FFB340',error:'#FF6B6B',line:'#5A6A84',btnSec:'#1A2236'},light:{bg:'#F5F7FA',panel:'#FFFFFF',border:'#E1E8F0',text:'#2D3A4A',label:'#8A9BB0',user:'#2B7FFF',system:'#00B96B',decision:'#FA8C16',error:'#F5222D',line:'#8A9BB0',btnSec:'#F0F4FA'}};
+let mode='dark';
+function box(svg,x,y,w,h,text,color,r=6){
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  const t=T[mode];
+  rect.setAttribute('x',x-w/2);rect.setAttribute('y',y-h/2);rect.setAttribute('width',w);rect.setAttribute('height',h);
+  rect.setAttribute('rx',r);rect.setAttribute('fill',color+'33');rect.setAttribute('stroke',color);rect.setAttribute('stroke-width','1.5');
+  const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+  txt.setAttribute('x',x);txt.setAttribute('y',y+1);txt.setAttribute('text-anchor','middle');txt.setAttribute('dominant-baseline','middle');
+  txt.setAttribute('fill',t.text);txt.setAttribute('font-size','12');txt.setAttribute('font-family','PingFang SC,sans-serif');
+  txt.textContent=text;g.appendChild(rect);g.appendChild(txt);svg.appendChild(g);
+}
+function diamond(svg,x,y,size,text,color){
+  const t=T[mode];const s=size;
+  const pts=`${x},${y-s} ${x+s*1.5},${y} ${x},${y+s} ${x-s*1.5},${y}`;
+  const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  poly.setAttribute('points',pts);poly.setAttribute('fill',color+'33');poly.setAttribute('stroke',color);poly.setAttribute('stroke-width','1.5');
+  const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+  txt.setAttribute('x',x);txt.setAttribute('y',y+1);txt.setAttribute('text-anchor','middle');txt.setAttribute('dominant-baseline','middle');
+  txt.setAttribute('fill',t.text);txt.setAttribute('font-size','12');txt.setAttribute('font-family','PingFang SC,sans-serif');
+  txt.textContent=text;svg.appendChild(poly);svg.appendChild(txt);
+}
+function arrow(svg,x1,y1,x2,y2,label='',color){
+  const t=T[mode];const c=color||t.line;
+  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',x1);line.setAttribute('y1',y1);line.setAttribute('x2',x2);line.setAttribute('y2',y2);
+  line.setAttribute('stroke',c);line.setAttribute('stroke-width','1.5');line.setAttribute('marker-end','url(#arrow)');
+  svg.appendChild(line);
+  if(label){const txt=document.createElementNS('http://www.w3.org/2000/svg','text');txt.setAttribute('x',(x1+x2)/2+5);txt.setAttribute('y',(y1+y2)/2-6);txt.setAttribute('fill',c);txt.setAttribute('font-size','11');txt.textContent=label;svg.appendChild(txt);}
+}
+function render(){
+  const svg=document.getElementById('flow-svg');svg.innerHTML='';
+  const t=T[mode];
+  svg.style.background=t.bg;
+  // Arrow marker
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+  const marker=document.createElementNS('http://www.w3.org/2000/svg','marker');
+  marker.setAttribute('id','arrow');marker.setAttribute('viewBox','0 0 10 10');marker.setAttribute('refX','9');marker.setAttribute('refY','5');
+  marker.setAttribute('markerWidth','6');marker.setAttribute('markerHeight','6');marker.setAttribute('orient','auto');
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d','M 0 0 L 10 5 L 0 10 z');path.setAttribute('fill',t.line);
+  marker.appendChild(path);defs.appendChild(marker);svg.appendChild(defs);
+  // Nodes
+  box(svg,350,40,120,32,'开始',t.system,16);
+  arrow(svg,350,56,350,88);
+  box(svg,350,104,160,32,'填写手机号/邮箱',t.user);
+  arrow(svg,350,120,350,152);
+  diamond(svg,350,172,22,'格式正确?',t.decision);
+  arrow(svg,350,194,350,226);
+  box(svg,350,242,160,32,'发送验证码',t.system);
+  arrow(svg,350,258,350,290);
+  box(svg,350,306,160,32,'输入验证码',t.user);
+  arrow(svg,350,322,350,354);
+  diamond(svg,350,374,22,'验证通过?',t.decision);
+  arrow(svg,350,396,350,428);
+  box(svg,350,444,160,32,'设置密码',t.user);
+  arrow(svg,350,460,350,492);
+  box(svg,350,508,120,28,'注册成功',t.system,14);
+  // Error paths
+  arrow(svg,455,172,530,172,'',t.error);
+  box(svg,565,172,80,28,'格式错误提示',t.error);
+  arrow(svg,530,172,530,104,'',t.error);
+  arrow(svg,530,104,430,104,'',t.error);
+  arrow(svg,455,374,530,374,'',t.error);
+  box(svg,565,374,80,28,'验证码错误',t.error);
+  arrow(svg,530,374,530,306,'',t.error);
+  arrow(svg,530,306,430,306,'',t.error);
+  // Labels
+  ['是','是'].forEach((_,i)=>{
+    const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x',358);txt.setAttribute('y',[200,402][i]);txt.setAttribute('fill',t.system);txt.setAttribute('font-size','11');txt.textContent='是';svg.appendChild(txt);
+    const txt2=document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt2.setAttribute('x',460);txt2.setAttribute('y',[166,368][i]);txt2.setAttribute('fill',t.error);txt2.setAttribute('font-size','11');txt2.textContent='否';svg.appendChild(txt2);
+  });
+}
+function applyTheme(m){const t=T[m];document.documentElement.className=m==='light'?'theme-light':'';document.querySelector('.editor').style.background=t.panel;document.querySelector('.editor').style.borderColor=t.border;const btn=document.getElementById('theme-btn');btn.style.background=t.btnSec;btn.style.color=t.text;btn.style.borderColor=t.border;render();}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);document.getElementById('theme-btn').textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+applyTheme('dark');
+</script></body></html>

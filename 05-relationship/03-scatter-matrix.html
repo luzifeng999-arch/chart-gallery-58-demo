@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>散点矩阵 Scatter Matrix</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);font-family:'PingFang SC',sans-serif;display:flex;height:100vh;transition:background .3s}:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-sec:#1A2236}.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-sec:#F0F4FA}.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}.chart-title{font-size:18px;font-weight:700;color:var(--title);margin-bottom:4px}.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}#chart{flex:1}.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}.editor-header p{font-size:12px;color:var(--label);margin-top:4px}.editor-body{flex:1;overflow-y:auto;padding:16px;font-size:12px;color:var(--label);line-height:1.8}.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border)}.btn-apply{background:#238636;color:#fff;border-color:#238636}.btn-reset{background:var(--btn-sec);color:var(--text)}#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}</style></head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title">鸢尾花数据集散点矩阵（4维×4维）</div>
+  <div class="chart-subtitle">对角线=各维度分布直方图 · 非对角=两两散点关系 · 颜色区分3个品种</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>图表说明</h3><p>散点矩阵 SPLOM</p></div>
+  <div class="editor-body">
+    散点矩阵（Scatter Plot Matrix/SPLOM）：<br><br>
+    • 同时展示多个维度两两间的散点关系<br>
+    • N个维度 → N×N 格子矩阵<br>
+    • 对角线通常放单维度直方图<br>
+    • 适合快速探索多变量数据集<br><br>
+    <b>数据集说明：</b><br>
+    鸢尾花（Iris）是机器学习经典数据集，4个特征，3个品种：<br>
+    <span style="color:#4D9EFF">■</span> Setosa（山鸢尾）<br>
+    <span style="color:#30D986">■</span> Versicolor（变色鸢尾）<br>
+    <span style="color:#FFB340">■</span> Virginica（维吉尼亚鸢尾）
+  </div>
+  <div class="editor-footer"><button class="btn btn-reset" onclick="resetData()">↺ 重置</button><button class="btn btn-apply" onclick="applyData()">✓ 应用</button></div>
+</div>
+<div id="toast"></div>
+<script>
+const T={dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',split:'#141E30',axisBorder:'#243048',titleColor:'#F0F4FF',textColor:'#C8D4E8',labelColor:'#5A6A84',s:['#4D9EFF','#30D986','#FFB340'],btnSec:'#1A2236'},light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',split:'#EEF2F7',axisBorder:'#C8D4E0',titleColor:'#0D1525',textColor:'#2D3A4A',labelColor:'#8A9BB0',s:['#2B7FFF','#00B96B','#FA8C16'],btnSec:'#F0F4FA'}};
+const DIMS=['花萼长','花萼宽','花瓣长','花瓣宽'];
+// Simplified Iris-like data [sepal_l, sepal_w, petal_l, petal_w, species]
+const DATA=[[5.1,3.5,1.4,0.2,0],[4.9,3.0,1.4,0.2,0],[5.0,3.6,1.4,0.2,0],[5.4,3.9,1.7,0.4,0],[4.7,3.2,1.3,0.2,0],[5.0,3.4,1.5,0.2,0],[5.8,2.7,5.1,1.9,2],[7.1,3.0,5.9,2.1,2],[6.3,2.9,5.6,1.8,2],[6.5,3.0,5.8,2.2,2],[7.6,3.0,6.6,2.1,2],[7.0,3.2,4.7,1.4,1],[6.4,3.2,4.5,1.5,1],[6.9,3.1,4.9,1.5,1],[5.5,2.3,4.0,1.3,1],[6.7,3.1,4.4,1.4,1],[6.3,3.3,6.0,2.5,2],[5.8,2.7,5.1,1.9,2],[6.3,2.7,4.9,1.8,1],[5.7,2.8,4.1,1.3,1]];
+let mode='dark';
+const chart=echarts.init(document.getElementById('chart'));
+window.addEventListener('resize',()=>chart.resize());
+function buildOption(t){
+  const n=4;const pad=0.02;const size=(1-pad*(n+1))/n;
+  const series=[];
+  for(let row=0;row<n;row++){for(let col=0;col<n;col++){
+    if(row===col){
+      const vals=DATA.map(d=>d[col]);const mn=Math.min(...vals),mx=Math.max(...vals);const bins=8;
+      const freq=Array(bins).fill(0);vals.forEach(v=>freq[Math.min(bins-1,Math.floor((v-mn)/(mx-mn)*bins))]++);
+      const maxF=Math.max(...freq);
+      series.push({type:'custom',renderItem:(params,api)=>{
+        const rects=freq.map((f,i)=>{
+          const x=(pad+(pad+size)*col)*api.getWidth();const y=(pad+(pad+size)*row)*api.getHeight();
+          const w=size*api.getWidth()/bins;const bh=f/maxF*size*api.getHeight()*0.9;
+          return{type:'rect',shape:{x:x+i*w,y:y+size*api.getHeight()-bh,width:w-1,height:bh},style:{fill:t.labelColor+'66'}};});
+        return{type:'group',children:rects};},data:[0],silent:true,z:1});
+    } else {
+      [0,1,2].forEach(sp=>{
+        const pts=DATA.filter(d=>d[4]===sp).map(d=>[d[col],d[row]]);
+        const xvals=DATA.map(d=>d[col]),yvals=DATA.map(d=>d[row]);
+        const xmn=Math.min(...xvals),xmx=Math.max(...xvals),ymn=Math.min(...yvals),ymx=Math.max(...yvals);
+        series.push({type:'custom',renderItem:(params,api)=>{
+          const children=pts.map(p=>{
+            const gx=api.getWidth()*(pad+(pad+size)*col+size*(p[0]-xmn)/(xmx-xmn));
+            const gy=api.getHeight()*(pad+(pad+size)*row+size*(1-(p[1]-ymn)/(ymx-ymn)));
+            return{type:'circle',shape:{cx:gx,cy:gy,r:3},style:{fill:t.s[sp]+'cc'}};});
+          return{type:'group',children};},data:[0],silent:true,z:2});
+      });
+    }
+  }}
+  // Axis labels
+  const xLabels=DIMS.map((d,i)=>({type:'text',left:`${(pad+(pad+size)*i+size/2)*100}%`,bottom:`${pad*100}%`,style:{text:d,fill:t.textColor,fontSize:11,textAlign:'center'}}));
+  return{backgroundColor:'transparent',tooltip:{show:false},graphic:[...xLabels],series};}
+function applyData(){chart.setOption(buildOption(T[mode]),true);showToast('✓ 已更新');}
+function resetData(){chart.setOption(buildOption(T[mode]),true);showToast('↺ 已重置');}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',1800);}
+function applyTheme(m){const t=T[m];document.documentElement.className=m==='light'?'theme-light':'';document.querySelector('.editor').style.background=t.panelBg;document.querySelector('.editor').style.borderColor=t.border;const btn=document.getElementById('theme-btn');btn.style.background=t.btnSec;btn.style.color=t.textColor;btn.style.borderColor=t.border;chart.setOption(buildOption(t),true);}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);document.getElementById('theme-btn').textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+applyTheme('dark');
+</script></body></html>

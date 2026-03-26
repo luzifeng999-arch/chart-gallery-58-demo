@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>平行坐标图 Parallel Coordinates</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);font-family:'PingFang SC',sans-serif;display:flex;height:100vh;transition:background .3s}:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-sec:#1A2236}.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-sec:#F0F4FA}.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}.chart-title{font-size:18px;font-weight:700;color:var(--title);margin-bottom:4px}.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}#chart{flex:1}.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}.editor-header p{font-size:12px;color:var(--label);margin-top:4px}.editor-body{flex:1;overflow-y:auto;padding:16px;font-size:12px;color:var(--label);line-height:1.8}.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border)}.btn-apply{background:#238636;color:#fff;border-color:#238636}.btn-reset{background:var(--btn-sec);color:var(--text)}#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}</style></head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title">汽车多维度性能平行坐标图</div>
+  <div class="chart-subtitle">每条线=一辆车 · 颜色区分品牌 · 各轴独立尺度 · 可拖拽轴上的刷选过滤</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>图表说明</h3><p>平行坐标图特性</p></div>
+  <div class="editor-body">
+    平行坐标图（PCP）用于高维数据分布探索：<br><br>
+    • 每条垂直轴 = 一个维度<br>
+    • 每条折线 = 一个观测样本<br>
+    • 颜色区分类别（品牌）<br>
+    • 平行线聚集表示该维度相关<br>
+    • 交叉线表示负相关<br><br>
+    <b>交互：</b>拖动轴上的选框可过滤样本。<br><br>
+    当前示例：<b>马力 vs 油耗</b>呈明显负相关（线条交叉密集）
+  </div>
+  <div class="editor-footer"><button class="btn btn-reset" onclick="resetData()">↺ 重置</button><button class="btn btn-apply" onclick="applyData()">✓ 应用</button></div>
+</div>
+<div id="toast"></div>
+<script>
+const T={dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',titleColor:'#F0F4FF',textColor:'#C8D4E8',labelColor:'#5A6A84',axisColor:'#243048',s:['#4D9EFF','#30D986','#FFB340','#FF6B6B'],btnSec:'#1A2236'},light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',titleColor:'#0D1525',textColor:'#2D3A4A',labelColor:'#8A9BB0',axisColor:'#C8D4E0',s:['#2B7FFF','#00B96B','#FA8C16','#F5222D'],btnSec:'#F0F4FA'}};
+// [name, 马力, 扭矩, 0-100加速, 最高时速, 油耗L/100, 价格万, brand_idx]
+const CARS=[['Model 3',283,420,5.3,225,14,25,0],['宝马3系',184,300,6.8,250,8.5,35,1],['奥迪A4',190,320,6.5,250,8.8,38,1],['奔驰C级',204,300,7.0,250,9.2,40,1],['Model Y',258,430,5.1,217,16,26,0],['途观L',220,350,7.5,220,9.8,28,2],['帕萨特',150,250,9.0,210,7.5,20,2],['思域',182,240,7.2,215,7.0,14,3],['凯美瑞',218,221,8.5,210,7.8,22,3],['雅阁',198,243,8.3,218,7.5,21,3]];
+const BRANDS=['特斯拉','德系豪华','大众','日系'];
+let mode='dark';
+const chart=echarts.init(document.getElementById('chart'));
+window.addEventListener('resize',()=>chart.resize());
+function buildOption(t){
+  return{backgroundColor:'transparent',legend:{data:BRANDS,textStyle:{color:t.textColor},top:0},parallelAxis:[{dim:0,name:'马力(HP)'},{dim:1,name:'扭矩(N·m)'},{dim:2,name:'0-100km/h(s)',inverse:true},{dim:3,name:'最高时速(km/h)'},{dim:4,name:'油耗/电耗',inverse:true},{dim:5,name:'价格(万元)'}],parallel:{left:50,right:20,top:50,bottom:30,axisExpandable:true,parallelAxisDefault:{type:'value',nameTextStyle:{color:t.textColor,fontSize:11},axisLine:{lineStyle:{color:t.axisColor}},axisTick:{lineStyle:{color:t.axisColor}},splitLine:{lineStyle:{color:t.border,type:'dashed'}},axisLabel:{color:t.labelColor}}},tooltip:{trigger:'item',backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor},formatter:p=>`${CARS[p.dataIndex][0]}<br/>品牌：${BRANDS[CARS[p.dataIndex][7]]}`},series:BRANDS.map((brand,bi)=>({name:brand,type:'parallel',data:CARS.filter(c=>c[7]===bi).map(c=>[c[1],c[2],c[3],c[4],c[5],c[6]]),lineStyle:{width:2,color:t.s[bi]+'cc'},emphasis:{lineStyle:{width:3,color:t.s[bi]}}}))};}
+function applyData(){chart.setOption(buildOption(T[mode]),true);showToast('✓ 已更新');}
+function resetData(){chart.setOption(buildOption(T[mode]),true);showToast('↺ 已重置');}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',1800);}
+function applyTheme(m){const t=T[m];document.documentElement.className=m==='light'?'theme-light':'';document.querySelector('.editor').style.background=t.panelBg;document.querySelector('.editor').style.borderColor=t.border;const btn=document.getElementById('theme-btn');btn.style.background=t.btnSec;btn.style.color=t.textColor;btn.style.borderColor=t.border;chart.setOption(buildOption(t),true);}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);document.getElementById('theme-btn').textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+applyTheme('dark');
+</script></body></html>

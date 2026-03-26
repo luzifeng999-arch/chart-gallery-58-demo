@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>旅程地图 Journey Map</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);font-family:'PingFang SC',sans-serif;display:flex;height:100vh;transition:background .3s;overflow:hidden}:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-sec:#1A2236}.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-sec:#F0F4FA}.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0;overflow:auto}.chart-title{font-size:18px;font-weight:700;color:var(--title);margin-bottom:4px;flex-shrink:0}.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px;flex-shrink:0}#journey-wrap{flex:1;overflow:auto}.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}.editor-header p{font-size:12px;color:var(--label);margin-top:4px}.editor-body{flex:1;overflow-y:auto;padding:16px;font-size:12px;color:var(--label);line-height:1.8}.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border)}.btn-apply{background:#238636;color:#fff;border-color:#238636}.btn-reset{background:var(--btn-sec);color:var(--text)}#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}</style></head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title">电商用户购物体验旅程地图</div>
+  <div class="chart-subtitle">用户从发现到复购的完整旅程 · 情绪曲线+痛点/机会点标注</div>
+  <div id="journey-wrap"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>图表说明</h3><p>User Journey Map</p></div>
+  <div class="editor-body">
+    用户旅程地图展示用户与产品的完整交互：<br><br>
+    • <b>阶段行</b>：用户体验的关键阶段<br>
+    • <b>行为行</b>：每个阶段的用户行为<br>
+    • <b>情绪曲线</b>：情绪高低起伏<br>
+    • <b>痛点</b>：负面体验（红色标注）<br>
+    • <b>机会</b>：可优化的设计机会（绿色）<br><br>
+    <b>使用场景：</b><br>
+    产品设计复盘、用研报告、服务设计
+  </div>
+  <div class="editor-footer"><button class="btn btn-reset" onclick="render()">↺ 刷新</button><button class="btn btn-apply" onclick="toggleTheme()">🌓 切换</button></div>
+</div>
+<script>
+const T={dark:{bg:'#080C14',panel:'#0E1420',border:'#1A2236',text:'#C8D4E8',label:'#5A6A84',title:'#F0F4FF',pos:'#30D986',neg:'#FF6B6B',neu:'#FFB340',stages:['#4D9EFF','#30D986','#FFB340','#9B7FFF','#FF8C42','#00D4D4'],btnSec:'#1A2236'},light:{bg:'#F5F7FA',panel:'#FFFFFF',border:'#E1E8F0',text:'#2D3A4A',label:'#8A9BB0',title:'#0D1525',pos:'#00B96B',neg:'#F5222D',neu:'#FA8C16',stages:['#2B7FFF','#00B96B','#FA8C16','#722ED1','#F97316','#0891B2'],btnSec:'#F0F4FA'}};
+let mode='dark';
+const DATA={stages:['发现','兴趣','决策','购买','使用','复购'],actions:['刷到推荐/搜索','浏览商品/对比','看评价/价格对比','下单支付','收货体验','售后&再购'],emotions:[3,4,2,4,3,5],pain:['信息过载','同质化商品多','虚假评价困扰','支付步骤繁琐','快递包装过度','优惠券难用'],opportunity:['个性化推荐','差异化卖点','可信评价系统','一键支付','环保包装','积分会员体系']};
+function render(){
+  const t=T[mode];const stageW=120;const rows=5;
+  const wrap=document.getElementById('journey-wrap');
+  const w=DATA.stages.length*stageW+120;const h=420;
+  wrap.innerHTML=`<svg viewBox="0 0 ${w} ${h}" style="width:100%;min-width:${w}px;background:${t.bg}" xmlns="http://www.w3.org/2000/svg"></svg>`;
+  const svg=wrap.querySelector('svg');
+  const x0=60;const rowH=60;const labels=['阶段','用户行为','情绪','痛点','机会'];
+  // Row labels
+  labels.forEach((l,i)=>{const txt=document.createElementNS('http://www.w3.org/2000/svg','text');txt.setAttribute('x',x0-8);txt.setAttribute('y',40+i*rowH+rowH/2);txt.setAttribute('text-anchor','end');txt.setAttribute('dominant-baseline','middle');txt.setAttribute('fill',t.label);txt.setAttribute('font-size','12');txt.setAttribute('font-family','PingFang SC,sans-serif');txt.textContent=l;svg.appendChild(txt);});
+  // Grid lines
+  for(let i=0;i<=rows;i++){const line=document.createElementNS('http://www.w3.org/2000/svg','line');line.setAttribute('x1',x0);line.setAttribute('y1',40+i*rowH);line.setAttribute('x2',w-20);line.setAttribute('y2',40+i*rowH);line.setAttribute('stroke',t.border);line.setAttribute('stroke-width','1');svg.appendChild(line);}
+  DATA.stages.forEach((stage,si)=>{
+    const cx=x0+si*stageW+stageW/2;
+    // Stage header
+    const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x',x0+si*stageW+4);rect.setAttribute('y',44);rect.setAttribute('width',stageW-8);rect.setAttribute('height',rowH-8);
+    rect.setAttribute('rx','6');rect.setAttribute('fill',t.stages[si%6]+'33');rect.setAttribute('stroke',t.stages[si%6]);rect.setAttribute('stroke-width','1');svg.appendChild(rect);
+    const stxt=document.createElementNS('http://www.w3.org/2000/svg','text');stxt.setAttribute('x',cx);stxt.setAttribute('y',40+rowH/2);stxt.setAttribute('text-anchor','middle');stxt.setAttribute('dominant-baseline','middle');stxt.setAttribute('fill',t.stages[si%6]);stxt.setAttribute('font-size','12');stxt.setAttribute('font-weight','600');stxt.setAttribute('font-family','PingFang SC,sans-serif');stxt.textContent=stage;svg.appendChild(stxt);
+    // Action
+    const atxt=document.createElementNS('http://www.w3.org/2000/svg','text');atxt.setAttribute('x',cx);atxt.setAttribute('y',40+rowH+rowH/2);atxt.setAttribute('text-anchor','middle');atxt.setAttribute('dominant-baseline','middle');atxt.setAttribute('fill',t.text);atxt.setAttribute('font-size','10');atxt.setAttribute('font-family','PingFang SC,sans-serif');atxt.textContent=DATA.actions[si];svg.appendChild(atxt);
+    // Pain
+    const paintxt=document.createElementNS('http://www.w3.org/2000/svg','text');paintxt.setAttribute('x',cx);paintxt.setAttribute('y',40+3*rowH+rowH/2);paintxt.setAttribute('text-anchor','middle');paintxt.setAttribute('dominant-baseline','middle');paintxt.setAttribute('fill',t.neg);paintxt.setAttribute('font-size','10');paintxt.setAttribute('font-family','PingFang SC,sans-serif');paintxt.textContent=DATA.pain[si];svg.appendChild(paintxt);
+    // Opportunity
+    const opptxt=document.createElementNS('http://www.w3.org/2000/svg','text');opptxt.setAttribute('x',cx);opptxt.setAttribute('y',40+4*rowH+rowH/2);opptxt.setAttribute('text-anchor','middle');opptxt.setAttribute('dominant-baseline','middle');opptxt.setAttribute('fill',t.pos);opptxt.setAttribute('font-size','10');opptxt.setAttribute('font-family','PingFang SC,sans-serif');opptxt.textContent=DATA.opportunity[si];svg.appendChild(opptxt);
+  });
+  // Emotion curve
+  const emoY=(e)=>40+2*rowH+(5-e)/5*rowH*0.9+rowH*0.05;
+  const pts=DATA.stages.map((_,si)=>[x0+si*stageW+stageW/2,emoY(DATA.emotions[si])]);
+  for(let i=0;i<pts.length-1;i++){
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',pts[i][0]);line.setAttribute('y1',pts[i][1]);line.setAttribute('x2',pts[i+1][0]);line.setAttribute('y2',pts[i+1][1]);
+    line.setAttribute('stroke',t.neu);line.setAttribute('stroke-width','2.5');svg.appendChild(line);
+  }
+  pts.forEach((p,i)=>{
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',p[0]);c.setAttribute('cy',p[1]);c.setAttribute('r','6');
+    c.setAttribute('fill',DATA.emotions[i]>=4?t.pos:DATA.emotions[i]<=2?t.neg:t.neu);c.setAttribute('stroke',t.bg);c.setAttribute('stroke-width','2');svg.appendChild(c);
+    const score=document.createElementNS('http://www.w3.org/2000/svg','text');score.setAttribute('x',p[0]);score.setAttribute('y',p[1]-12);score.setAttribute('text-anchor','middle');score.setAttribute('fill',t.label);score.setAttribute('font-size','11');score.textContent=['😞','😟','😐','🙂','😊','😄'][DATA.emotions[i]];svg.appendChild(score);
+  });
+}
+function applyTheme(m){const t=T[m];document.documentElement.className=m==='light'?'theme-light':'';document.querySelector('.editor').style.background=t.panel;document.querySelector('.editor').style.borderColor=t.border;const btn=document.getElementById('theme-btn');btn.style.background=t.btnSec;btn.style.color=t.text;btn.style.borderColor=t.border;render();}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);document.getElementById('theme-btn').textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+applyTheme('dark');
+</script></body></html>

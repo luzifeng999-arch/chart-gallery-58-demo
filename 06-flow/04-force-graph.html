@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>弦图/和弦图 Arc Diagram</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);font-family:'PingFang SC',sans-serif;display:flex;height:100vh;transition:background .3s}:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-sec:#1A2236}.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-sec:#F0F4FA}.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}.chart-title{font-size:18px;font-weight:700;color:var(--title);margin-bottom:4px}.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}#chart{flex:1}.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}.editor-header p{font-size:12px;color:var(--label);margin-top:4px}.editor-body{flex:1;overflow-y:auto;padding:16px;font-size:12px;color:var(--label);line-height:1.8}.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border)}.btn-apply{background:#238636;color:#fff;border-color:#238636}.btn-reset{background:var(--btn-sec);color:var(--text)}#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}</style></head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title">知识图谱实体关系网络（力导向图）</div>
+  <div class="chart-subtitle">节点大小=重要度 · 连线粗细=关系强度 · 可拖拽交互 · 悬停高亮邻居</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>图表说明</h3><p>力导向图 Force Graph</p></div>
+  <div class="editor-body">
+    力导向图（Force-directed Graph）：<br><br>
+    • 节点自动排布，关系紧密的节点靠近<br>
+    • 节点大小=度中心性（连接数）<br>
+    • 边的粗细=关系权重<br>
+    • 颜色区分实体类型<br><br>
+    <b>物理模拟：</b><br>
+    节点之间有斥力，边有引力，最终达到平衡态布局。<br><br>
+    <b>交互：</b><br>
+    拖拽节点可重新布局<br>
+    滚轮缩放，鼠标移动画布<br>
+    悬停节点高亮所有邻接关系
+  </div>
+  <div class="editor-footer"><button class="btn btn-reset" onclick="resetData()">↺ 重置</button><button class="btn btn-apply" onclick="applyData()">✓ 应用</button></div>
+</div>
+<div id="toast"></div>
+<script>
+const T={dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',titleColor:'#F0F4FF',textColor:'#C8D4E8',labelColor:'#5A6A84',s:['#4D9EFF','#30D986','#FFB340','#9B7FFF','#FF8C42'],btnSec:'#1A2236'},light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',titleColor:'#0D1525',textColor:'#2D3A4A',labelColor:'#8A9BB0',s:['#2B7FFF','#00B96B','#FA8C16','#722ED1','#F97316'],btnSec:'#F0F4FA'}};
+let mode='dark';
+const chart=echarts.init(document.getElementById('chart'));
+window.addEventListener('resize',()=>chart.resize());
+const CATS=['人物','组织','地点','概念','事件'];
+const NODES=[{name:'AI',cat:3,size:60},{name:'OpenAI',cat:1,size:50},{name:'Sam Altman',cat:0,size:42},{name:'GPT-4',cat:3,size:45},{name:'微软',cat:1,size:48},{name:'Anthropic',cat:1,size:40},{name:'Claude',cat:3,size:38},{name:'DeepMind',cat:1,size:40},{name:'Gemini',cat:3,size:36},{name:'机器学习',cat:3,size:44},{name:'深度学习',cat:3,size:42},{name:'硅谷',cat:2,size:35},{name:'AIGC',cat:4,size:38}];
+const EDGES=[['AI','机器学习',8],['AI','深度学习',8],['AI','AIGC',7],['OpenAI','GPT-4',9],['OpenAI','Sam Altman',8],['OpenAI','微软',7],['Sam Altman','AI',5],['微软','AI',6],['Anthropic','Claude',9],['DeepMind','Gemini',9],['GPT-4','AI',8],['Claude','AI',7],['Gemini','AI',7],['机器学习','深度学习',8],['OpenAI','硅谷',4],['Anthropic','硅谷',4],['DeepMind','AI',6]];
+function buildOption(t){
+  return{backgroundColor:'transparent',tooltip:{trigger:'item',backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor},formatter:p=>p.dataType==='edge'?`${p.data.source} → ${p.data.target}`:p.data.name},legend:{data:CATS,textStyle:{color:t.textColor},top:0,orient:'horizontal'},series:[{type:'graph',layout:'force',roam:true,force:{repulsion:300,gravity:0.05,edgeLength:[60,150]},data:NODES.map((n,i)=>({name:n.name,category:n.cat,symbolSize:n.size,label:{show:n.size>40,color:t.textColor,fontSize:11},itemStyle:{color:t.s[n.cat%5]}})),links:EDGES.map(e=>({source:e[0],target:e[1],value:e[2],lineStyle:{width:e[2]/5,color:t.labelColor+'88',curveness:0.1}})),categories:CATS.map((c,i)=>({name:c,itemStyle:{color:t.s[i%5]}})),emphasis:{focus:'adjacency',lineStyle:{width:4}},itemStyle:{borderColor:t.bg,borderWidth:2}}]};}
+function applyData(){chart.setOption(buildOption(T[mode]),true);showToast('✓ 已更新');}
+function resetData(){chart.setOption(buildOption(T[mode]),true);showToast('↺ 已重置');}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',1800);}
+function applyTheme(m){const t=T[m];document.documentElement.className=m==='light'?'theme-light':'';document.querySelector('.editor').style.background=t.panelBg;document.querySelector('.editor').style.borderColor=t.border;const btn=document.getElementById('theme-btn');btn.style.background=t.btnSec;btn.style.color=t.textColor;btn.style.borderColor=t.border;chart.setOption(buildOption(t),true);}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);document.getElementById('theme-btn').textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+applyTheme('dark');
+</script></body></html>

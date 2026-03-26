@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>哑铃图 Dumbbell Chart</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}
+.chart-title{font-size:18px;font-weight:700;color:var(--title);margin-bottom:4px}
+.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}
+#chart{flex:1}
+.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}
+.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:4px}
+.editor-body{flex:1;overflow-y:auto;padding:12px 16px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{color:var(--label);font-weight:500;padding:6px 4px;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:5px 4px}
+td input{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 5px;border-radius:4px;font-size:11px;outline:none}
+td input:focus{border-color:var(--input-focus)}
+.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border)}
+.btn-apply{background:#238636;color:#fff;border-color:#238636}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title">员工薪资涨幅对比（2022 vs 2024）</div>
+  <div class="chart-subtitle">哑铃两端=前后两个时间点，连线长度=变化幅度 · 核心洞察：AI相关岗位涨幅最大</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>数据编辑</h3><p>前后两点变化对比</p></div>
+  <div class="editor-body">
+    <table><thead><tr><th>岗位</th><th>2022</th><th>2024</th></tr></thead><tbody id="data-rows"></tbody></table>
+  </div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const THEMES={dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',titleColor:'#F0F4FF',textColor:'#C8D4E8',labelColor:'#5A6A84',series:['#4D9EFF','#30D986','#FFB340','#FF6B6B'],positive:'#30D986',negative:'#FF6B6B',lineColor:'#243048',btnSec:'#1A2236',inputBg:'#080C14',inputBorder:'#1A2236',inputFocus:'#4D9EFF'},light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',titleColor:'#0D1525',textColor:'#2D3A4A',labelColor:'#8A9BB0',series:['#2B7FFF','#00B96B','#FA8C16','#F5222D'],positive:'#00B96B',negative:'#F5222D',lineColor:'#C8D4E0',btnSec:'#F0F4FA',inputBg:'#FFFFFF',inputBorder:'#D9E3EE',inputFocus:'#2B7FFF'}};
+const DEFAULT={items:[{name:'算法工程师',v1:28,v2:52},{name:'大模型研发',v1:32,v2:65},{name:'产品经理',v1:22,v2:33},{name:'前端开发',v1:20,v2:28},{name:'数据分析师',v1:18,v2:29},{name:'UI设计师',v1:16,v2:22},{name:'运营专员',v1:12,v2:16},{name:'销售顾问',v1:15,v2:18}]};
+let DATA=JSON.parse(JSON.stringify(DEFAULT)),mode='dark';
+const chart=echarts.init(document.getElementById('chart'));
+window.addEventListener('resize',()=>chart.resize());
+function buildOption(t){
+  const names=DATA.items.map(d=>d.name);
+  return{backgroundColor:'transparent',tooltip:{trigger:'axis',backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor},formatter:p=>{const d=DATA.items[p[0].dataIndex];const diff=d.v2-d.v1;const pct=Math.round(diff/d.v1*100);return `${d.name}<br/>2022：<b>${d.v1}K</b><br/>2024：<b>${d.v2}K</b><br/>涨幅：<b style="color:${diff>0?t.positive:t.negative}">+${diff}K（+${pct}%）</b>`;}},legend:{data:['2022年','2024年'],textStyle:{color:t.textColor},top:0},grid:{left:90,right:60,top:30,bottom:30},xAxis:{type:'value',axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:t.border,type:'dashed'}},axisLabel:{color:t.labelColor,formatter:v=>v+'K'}},yAxis:{type:'category',data:names,axisLine:{lineStyle:{color:t.border}},axisLabel:{color:t.textColor},axisTick:{show:false}},series:[
+      {name:'连线',type:'custom',renderItem:(params,api)=>{const y=api.coord([0,params.dataIndex])[1];const x1=api.coord([DATA.items[params.dataIndex].v1,0])[0];const x2=api.coord([DATA.items[params.dataIndex].v2,0])[0];return{type:'line',shape:{x1,y1:y,x2,y2:y},style:{stroke:t.lineColor,lineWidth:2}};},data:DATA.items.map((_,i)=>i),z:1,silent:true},
+      {name:'2022年',type:'scatter',data:DATA.items.map(d=>d.v1),symbolSize:12,itemStyle:{color:t.series[2]},z:10},
+      {name:'2024年',type:'scatter',data:DATA.items.map(d=>d.v2),symbolSize:12,itemStyle:{color:d=>DATA.items[d.dataIndex].v2>DATA.items[d.dataIndex].v1?t.positive:t.negative},z:10,label:{show:true,position:'right',color:t.labelColor,formatter:p=>{const d=DATA.items[p.dataIndex];return `+${d.v2-d.v1}K`;}}}
+    ]};
+}
+function renderTable(){
+  const t=THEMES[mode];
+  document.getElementById('data-rows').innerHTML=DATA.items.map((d,i)=>`<tr>
+    <td><input value="${d.name}" oninput="DATA.items[${i}].name=this.value" style="background:${t.inputBg};border-color:${t.inputBorder};color:${t.textColor}"></td>
+    <td><input type="number" value="${d.v1}" oninput="DATA.items[${i}].v1=+this.value" style="background:${t.inputBg};border-color:${t.inputBorder};color:${t.textColor}"></td>
+    <td><input type="number" value="${d.v2}" oninput="DATA.items[${i}].v2=+this.value" style="background:${t.inputBg};border-color:${t.inputBorder};color:${t.textColor}"></td>
+  </tr>`).join('');
+}
+function applyData(){chart.setOption(buildOption(THEMES[mode]),true);showToast('✓ 已更新');}
+function resetData(){DATA=JSON.parse(JSON.stringify(DEFAULT));renderTable();applyData();showToast('↺ 已重置');}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',1800);}
+function applyTheme(m){const t=THEMES[m];document.documentElement.className=m==='light'?'theme-light':'';document.querySelector('.editor').style.background=t.panelBg;document.querySelector('.editor').style.borderColor=t.border;const btn=document.getElementById('theme-btn');btn.style.background=t.btnSec;btn.style.color=t.textColor;btn.style.borderColor=t.border;renderTable();chart.setOption(buildOption(t),true);}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);document.getElementById('theme-btn').textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+renderTable();applyTheme('dark');
+</script>
+</body>
+</html>

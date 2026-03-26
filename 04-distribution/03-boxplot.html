@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>箱线图 Box Plot</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);font-family:'PingFang SC',sans-serif;display:flex;height:100vh;transition:background .3s}:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-sec:#1A2236}.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-sec:#F0F4FA}.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}.chart-title{font-size:18px;font-weight:700;color:var(--title);margin-bottom:4px}.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}#chart{flex:1}.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}.editor-header p{font-size:12px;color:var(--label);margin-top:4px}.editor-body{flex:1;overflow-y:auto;padding:16px;font-size:12px;color:var(--label);line-height:1.8}.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border)}.btn-apply{background:#238636;color:#fff;border-color:#238636}.btn-reset{background:var(--btn-sec);color:var(--text)}#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}</style></head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title">各部门薪资分布箱线图</div>
+  <div class="chart-subtitle">五数概况：最小值/Q1/中位数/Q3/最大值 + 离群点标注</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>读图说明</h3><p>箱线图结构</p></div>
+  <div class="editor-body">
+    <b>箱体结构：</b><br><br>
+    ┌─── 最大值（上须）<br>
+    │<br>
+    ├─── Q3（75百分位）<br>
+    │█████<br>
+    ├─── 中位数（红线）<br>
+    │█████<br>
+    ├─── Q1（25百分位）<br>
+    │<br>
+    └─── 最小值（下须）<br>
+    ◆ 超出1.5×IQR的点=异常值<br><br>
+    <b>适用：</b>多组数据分布形状和离散程度对比
+  </div>
+  <div class="editor-footer"><button class="btn btn-reset" onclick="resetData()">↺ 重置</button><button class="btn btn-apply" onclick="applyData()">✓ 应用</button></div>
+</div>
+<div id="toast"></div>
+<script>
+const T={dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',axisBorder:'#243048',split:'#141E30',titleColor:'#F0F4FF',textColor:'#C8D4E8',labelColor:'#5A6A84',s:['#4D9EFF','#30D986','#FFB340','#9B7FFF','#FF8C42','#00D4D4'],btnSec:'#1A2236'},light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',axisBorder:'#C8D4E0',split:'#EEF2F7',titleColor:'#0D1525',textColor:'#2D3A4A',labelColor:'#8A9BB0',s:['#2B7FFF','#00B96B','#FA8C16','#722ED1','#F97316','#0891B2'],btnSec:'#F0F4FA'}};
+// [min, Q1, median, Q3, max] per dept
+const DF={depts:['研发','产品','设计','运营','市场','销售'],boxes:[[18,26,34,45,85],[20,28,36,42,70],[16,22,28,36,55],[12,16,22,30,48],[14,18,25,35,65],[10,16,24,38,90]],outliers:[[180,200],[],[ ],[310],[],[ 950,860]]};
+let mode='dark';
+const chart=echarts.init(document.getElementById('chart'));
+window.addEventListener('resize',()=>chart.resize());
+function buildOption(t){
+  return{backgroundColor:'transparent',tooltip:{trigger:'axis',axisPointer:{type:'shadow'},backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor},formatter:(params)=>{const p=params[0];const i=p.dataIndex;const b=DF.boxes[i];return `${DF.depts[i]}<br/>最大：${b[4]}K | 最小：${b[0]}K<br/>Q3：${b[3]}K | Q1：${b[1]}K<br/>中位数：<b>${b[2]}K</b>`;}},grid:{left:60,right:20,top:20,bottom:40},xAxis:{type:'category',data:DF.depts,axisLine:{lineStyle:{color:t.axisBorder}},axisLabel:{color:t.labelColor},axisTick:{show:false}},yAxis:{type:'value',axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:t.split,type:'dashed'}},axisLabel:{color:t.labelColor,formatter:v=>v+'K'}},series:[{type:'boxplot',data:DF.boxes,boxWidth:['30%','50%'],itemStyle:{color:p=>t.s[p.dataIndex%6]+'44',borderColor:p=>t.s[p.dataIndex%6],borderWidth:2},emphasis:{itemStyle:{shadowBlur:10}}},{type:'scatter',data:DF.depts.flatMap((d,i)=>DF.outliers[i].map(v=>[i,v])),symbolSize:8,itemStyle:{color:'#FF6B6B'},tooltip:{formatter:p=>`${DF.depts[p.data[0]]}<br/>异常值：${p.data[1]}K`}}]};
+}
+function applyData(){chart.setOption(buildOption(T[mode]),true);showToast('✓ 已更新');}
+function resetData(){chart.setOption(buildOption(T[mode]),true);showToast('↺ 已重置');}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',1800);}
+function applyTheme(m){const t=T[m];document.documentElement.className=m==='light'?'theme-light':'';document.querySelector('.editor').style.background=t.panelBg;document.querySelector('.editor').style.borderColor=t.border;const btn=document.getElementById('theme-btn');btn.style.background=t.btnSec;btn.style.color=t.textColor;btn.style.borderColor=t.border;chart.setOption(buildOption(t),true);}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);document.getElementById('theme-btn').textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+applyTheme('dark');
+</script></body></html>

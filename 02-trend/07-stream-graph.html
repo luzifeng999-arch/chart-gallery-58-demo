@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>流图 Stream Graph</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);font-family:'PingFang SC',sans-serif;display:flex;height:100vh;transition:background .3s}:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-sec:#1A2236}.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-sec:#F0F4FA}.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}.chart-title{font-size:18px;font-weight:700;color:var(--title);margin-bottom:4px}.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}#chart{flex:1}.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}.editor-header p{font-size:12px;color:var(--label);margin-top:4px}.editor-body{flex:1;overflow-y:auto;padding:16px;font-size:12px;color:var(--label);line-height:1.8}.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border)}.btn-apply{background:#238636;color:#fff;border-color:#238636}.btn-reset{background:var(--btn-sec);color:var(--text)}#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}</style></head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title">音乐流媒体用户体量流动（流图）</div>
+  <div class="chart-subtitle">2018–2024年各平台用户量涌动 · 流图强调波动体量感而非精确读取</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>图表说明</h3><p>Stream Graph 特性</p></div>
+  <div class="editor-body">
+    流图（Stream Graph）是堆叠面积图的变体：<br><br>
+    • 以中轴为基线，数据在两侧流动展开<br>
+    • 宽度代表各类别在该时间点的体量<br>
+    • 强调整体波动趋势，弱化精确数值<br>
+    • 适合展示多类别随时间的相对增减<br><br>
+    <b>使用场景：</b>音乐/视频平台市场份额流动、话题热度演变等视觉型展示
+  </div>
+  <div class="editor-footer"><button class="btn btn-reset" onclick="resetData()">↺ 重置</button><button class="btn btn-apply" onclick="applyData()">✓ 应用</button></div>
+</div>
+<div id="toast"></div>
+<script>
+const T={dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',axisBorder:'#243048',split:'#141E30',titleColor:'#F0F4FF',textColor:'#C8D4E8',labelColor:'#5A6A84',s:['#4D9EFF','#30D986','#FFB340','#9B7FFF','#FF8C42'],btnSec:'#1A2236'},light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',axisBorder:'#C8D4E0',split:'#EEF2F7',titleColor:'#0D1525',textColor:'#2D3A4A',labelColor:'#8A9BB0',s:['#2B7FFF','#00B96B','#FA8C16','#722ED1','#F97316'],btnSec:'#F0F4FA'}};
+const years=['2018','2019','2020','2021','2022','2023','2024'];
+const platforms=[{name:'Spotify',data:[8000,9500,11000,13000,15000,18000,21000]},{name:'Apple Music',data:[5000,5800,6500,7200,8000,8800,9500]},{name:'网易云',data:[4000,5000,6200,7500,9000,10500,12000]},{name:'QQ音乐',data:[6000,6500,7000,7200,7500,7800,8000]},{name:'YouTube',data:[3000,3800,5000,6500,7800,9000,10500]}];
+let mode='dark';
+const chart=echarts.init(document.getElementById('chart'));
+window.addEventListener('resize',()=>chart.resize());
+function buildOption(t){return{backgroundColor:'transparent',tooltip:{trigger:'axis',backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor}},legend:{data:platforms.map(p=>p.name),textStyle:{color:t.textColor},bottom:0},grid:{left:50,right:20,top:20,bottom:50},xAxis:{type:'category',data:years,axisLine:{lineStyle:{color:t.axisBorder}},axisLabel:{color:t.labelColor},axisTick:{show:false}},yAxis:{type:'value',axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:t.split,type:'dashed'}},axisLabel:{color:t.labelColor}},series:platforms.map((p,i)=>({name:p.name,type:'line',stack:'total',smooth:true,data:p.data,lineStyle:{width:0},areaStyle:{color:t.s[i]+'bb'},emphasis:{focus:'series'},symbol:'none'}))};}
+function applyData(){chart.setOption(buildOption(T[mode]),true);showToast('✓ 已更新');}
+function resetData(){chart.setOption(buildOption(T[mode]),true);showToast('↺ 已重置');}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',1800);}
+function applyTheme(m){const t=T[m];document.documentElement.className=m==='light'?'theme-light':'';document.querySelector('.editor').style.background=t.panelBg;document.querySelector('.editor').style.borderColor=t.border;const btn=document.getElementById('theme-btn');btn.style.background=t.btnSec;btn.style.color=t.textColor;btn.style.borderColor=t.border;chart.setOption(buildOption(t),true);}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);document.getElementById('theme-btn').textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+applyTheme('dark');
+</script></body></html>
