@@ -1,11 +1,115 @@
-﻿<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>思维导图</title><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script><style>body{margin:0;background:#080C14}#c{width:100vw;height:100vh}</style></head><body><div id="c"></div><script>echarts.init(document.getElementById('c')).setOption({series:[{type:'tree',layout:'radial',data:[{name:'中心主题',children:[{name:'分支1'},{name:'分支2'},{name:'分支3'}]}],label:{color:'#C8D4E8'},itemStyle:{color:'#30D986'}}]});
-window.addEventListener('message', function(e) {
-  if (e.data && e.data.type === 'setTheme') {
-    if (typeof applyTheme === 'function') {
-      mode = e.data.theme;
-      applyTheme(mode);
-    }
-    var btn = document.getElementById('theme-btn');
-    if (btn) btn.style.display = 'none';
-  }
-});</script></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>思维导图 Mind Map</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--split:#141E30;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--split:#EEF2F7;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}
+.chart-title{font-size:18px;font-weight:700;color:var(--title);padding:4px 0;margin-bottom:4px;outline:none;transition:color .3s}
+.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}
+#chart{flex:1}
+.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:background .3s,border-color .3s}
+.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title);transition:color .3s}
+.editor-header p{font-size:12px;color:var(--label);margin-top:4px;transition:color .3s}
+.editor-body{flex:1;overflow-y:auto;padding:12px 16px}
+textarea{width:100%;min-height:300px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:8px;border-radius:6px;font-size:11px;font-family:monospace;outline:none;resize:vertical;transition:all .2s;line-height:1.6}
+textarea:focus{border-color:var(--input-focus)}
+.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .2s}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:all .25s}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+.err{color:#FF6B6B;font-size:12px;margin-top:6px;min-height:16px}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">产品规划思维导图</div>
+  <div class="chart-subtitle">2024年产品路线图全景思维导图</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>数据编辑</h3><p>编辑JSON思维导图结构</p></div>
+  <div class="editor-body">
+    <textarea id="json-input"></textarea>
+    <div class="err" id="err-msg"></div>
+  </div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const THEMES = {
+  dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',titleColor:'#F0F4FF',textColor:'#C8D4E8',labelColor:'#5A6A84',btnSec:'#1A2236',inputBg:'#080C14',inputBorder:'#1A2236',inputFocus:'#4D9EFF',colors:['#4D9EFF','#30D986','#FFB340','#FF6B6B','#9B7FFF']},
+  light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',titleColor:'#0D1525',textColor:'#2D3A4A',labelColor:'#8A9BB0',btnSec:'#F0F4FA',inputBg:'#FFFFFF',inputBorder:'#D9E3EE',inputFocus:'#2B7FFF',colors:['#2B7FFF','#00B96B','#FA8C16','#F5222D','#722ED1']}
+};
+const DEFAULT_TREE = {
+  name:'产品规划',children:[
+    {name:'核心功能',children:[{name:'用户登录'},{name:'数据看板'},{name:'报表导出'}]},
+    {name:'性能优化',children:[{name:'加载速度'},{name:'内存优化'},{name:'CDN加速'}]},
+    {name:'用户体验',children:[{name:'交互设计'},{name:'响应式布局'},{name:'无障碍访问'}]},
+    {name:'商业化',children:[{name:'付费订阅'},{name:'广告系统'},{name:'企业定制'}]}
+  ]
+};
+let DATA = JSON.parse(JSON.stringify(DEFAULT_TREE));
+let mode = 'dark';
+const chart = echarts.init(document.getElementById('chart'));
+window.addEventListener('resize', ()=>chart.resize());
+
+function colorizeTree(node, colors, depth=0) {
+  const color = colors[depth % colors.length];
+  return {
+    ...node,
+    itemStyle:{color},
+    lineStyle:{color},
+    children: node.children ? node.children.map(c=>colorizeTree(c,colors,depth+1)) : undefined
+  };
+}
+
+function buildOption(t) {
+  return {
+    backgroundColor:'transparent',
+    series:[{
+      type:'tree',
+      data:[colorizeTree(DATA, t.colors)],
+      top:'5%',left:'15%',bottom:'5%',right:'15%',
+      symbolSize:8,orient:'LR',
+      label:{position:'left',rotate:0,verticalAlign:'middle',align:'right',fontSize:12,color:t.textColor},
+      leaves:{label:{position:'right',rotate:0,verticalAlign:'middle',align:'left',color:t.labelColor}},
+      expandAndCollapse:true,animationDuration:400
+    }]
+  };
+}
+
+function applyData(){
+  try{DATA=JSON.parse(document.getElementById('json-input').value);document.getElementById('err-msg').textContent='';chart.setOption(buildOption(THEMES[mode]),true);showToast('✓ 已更新');}
+  catch(e){document.getElementById('err-msg').textContent='❌ JSON错误: '+e.message;}
+}
+function resetData(){DATA=JSON.parse(JSON.stringify(DEFAULT_TREE));document.getElementById('json-input').value=JSON.stringify(DATA,null,2);document.getElementById('err-msg').textContent='';chart.setOption(buildOption(THEMES[mode]),true);showToast('↺ 已重置');}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',1800);}
+function applyTheme(m){
+  const t=THEMES[m];
+  document.documentElement.className=m==='light'?'theme-light':'';
+  document.querySelector('.editor').style.background=t.panelBg;
+  document.querySelector('.editor').style.borderColor=t.border;
+  const btn=document.getElementById('theme-btn');if(btn){btn.style.background=t.btnSec;btn.style.color=t.textColor;btn.style.borderColor=t.border;}
+  const ta=document.getElementById('json-input');ta.style.background=t.inputBg;ta.style.borderColor=t.inputBorder;ta.style.color=t.textColor;
+  chart.setOption(buildOption(t),true);
+}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);const btn=document.getElementById('theme-btn');if(btn)btn.textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+window.addEventListener('message',function(e){if(e.data&&e.data.type==='setTheme'){mode=e.data.theme;applyTheme(mode);var btn=document.getElementById('theme-btn');if(btn)btn.style.display='none';}});
+document.getElementById('json-input').value=JSON.stringify(DEFAULT_TREE,null,2);
+chart.setOption(buildOption(THEMES[mode]));
+</script>
+</body>
+</html>

@@ -1,11 +1,132 @@
-﻿<!DOCTYPE html><html><head><meta charset="UTF-8"><title>仪表盘 Gauge</title><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script><style>body{margin:0;background:#080C14}#c{width:100vw;height:100vh}</style></head><body><div id="c"></div><script>echarts.init(document.getElementById('c')).setOption({series:[{type:'gauge',progress:{show:true,width:18,itemStyle:{color:'#30D986'}},axisLine:{lineStyle:{width:18,color:[[1,'#1A2236']]}},axisTick:{show:false},splitLine:{show:false},axisLabel:{color:'#5A6A84',fontSize:12},detail:{valueAnimation:true,formatter:'{value}%',color:'#F0F4FF',fontSize:32},data:[{value:75,name:'完成度'}]}]});
-window.addEventListener('message', function(e) {
-  if (e.data && e.data.type === 'setTheme') {
-    if (typeof applyTheme === 'function') {
-      mode = e.data.theme;
-      applyTheme(mode);
-    }
-    var btn = document.getElementById('theme-btn');
-    if (btn) btn.style.display = 'none';
-  }
-});</script></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>仪表盘 Gauge</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}
+.chart-title{font-size:18px;font-weight:700;color:var(--title);padding:4px 0;margin-bottom:4px;outline:none;transition:color .3s}
+.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}
+#chart{flex:1}
+.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:background .3s,border-color .3s}
+.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title);transition:color .3s}
+.editor-header p{font-size:12px;color:var(--label);margin-top:4px;transition:color .3s}
+.editor-body{flex:1;overflow-y:auto;padding:12px 16px}
+.control-row{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.control-label{font-size:12px;color:var(--label);font-weight:500}
+.control-row input[type=text],.control-row input[type=number]{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:6px 8px;border-radius:4px;font-size:12px;outline:none;transition:all .2s}
+.control-row input:focus{border-color:var(--input-focus)}
+.control-row input[type=range]{width:100%;accent-color:var(--input-focus);height:6px}
+.control-value{font-size:13px;font-weight:600;color:var(--title);margin-top:2px}
+.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .2s}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:all .25s}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">项目完成度仪表盘</div>
+  <div class="chart-subtitle">实时监控项目进度和完成情况</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>数据编辑</h3><p>调整仪表盘参数</p></div>
+  <div class="editor-body">
+    <div class="control-row">
+      <span class="control-label">标题</span>
+      <input type="text" id="title" value="完成度">
+    </div>
+    <div class="control-row">
+      <span class="control-label">当前数值：<span class="control-value" id="v1">75</span>%</span>
+      <input type="range" min="0" max="100" value="75" id="s1" oninput="document.getElementById('v1').textContent=this.value">
+    </div>
+    <div class="control-row">
+      <span class="control-label">最小值</span>
+      <input type="number" id="min" value="0">
+    </div>
+    <div class="control-row">
+      <span class="control-label">最大值</span>
+      <input type="number" id="max" value="100">
+    </div>
+    <div class="control-row">
+      <span class="control-label">分段数</span>
+      <input type="number" id="splitNumber" value="10" min="5" max="20">
+    </div>
+  </div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const THEMES = {
+  dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',axisBg:'#1A2236',title:'#F0F4FF',text:'#C8D4E8',label:'#5A6A84',btnSec:'#1A2236',inputBg:'#080C14',inputBorder:'#1A2236',inputFocus:'#4D9EFF',progressColor:'#30D986'},
+  light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',axisBg:'#E1E8F0',title:'#0D1525',text:'#2D3A4A',label:'#8A9BB0',btnSec:'#F0F4FA',inputBg:'#FFFFFF',inputBorder:'#D9E3EE',inputFocus:'#2B7FFF',progressColor:'#1677FF'}
+};
+let mode = 'dark';
+const chart = echarts.init(document.getElementById('chart'));
+window.addEventListener('resize',()=>chart.resize());
+
+function buildOption(t) {
+  const value = +document.getElementById('s1').value;
+  const min = +document.getElementById('min').value;
+  const max = +document.getElementById('max').value;
+  const splitNumber = +document.getElementById('splitNumber').value;
+  const title = document.getElementById('title').value;
+  
+  return {
+    backgroundColor:'transparent',
+    series:[{
+      type:'gauge',
+      min,max,splitNumber,
+      progress:{show:true,width:18,itemStyle:{color:t.progressColor}},
+      axisLine:{lineStyle:{width:18,color:[[1,t.axisBg]]}},
+      axisTick:{distance:-24,length:6,lineStyle:{color:t.label,width:1}},
+      splitLine:{distance:-28,length:20,lineStyle:{color:t.label,width:2}},
+      axisLabel:{color:t.label,distance:32,fontSize:11},
+      anchor:{show:true,showAbove:true,size:16,itemStyle:{borderWidth:8,borderColor:t.progressColor}},
+      title:{show:false},
+      detail:{valueAnimation:true,formatter:'{value}%',color:t.title,fontSize:32,offsetCenter:[0,'70%']},
+      data:[{value,name:title}]
+    }]
+  };
+}
+
+function applyData(){chart.setOption(buildOption(THEMES[mode]),true);showToast('✓ 已更新');}
+function resetData(){
+  document.getElementById('title').value='完成度';
+  document.getElementById('s1').value=75;document.getElementById('v1').textContent=75;
+  document.getElementById('min').value=0;
+  document.getElementById('max').value=100;
+  document.getElementById('splitNumber').value=10;
+  applyData();showToast('↺ 已重置');
+}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',1800);}
+function applyTheme(m){
+  const t=THEMES[m];
+  document.documentElement.className=m==='light'?'theme-light':'';
+  document.querySelector('.editor').style.background=t.panelBg;
+  document.querySelector('.editor').style.borderColor=t.border;
+  const btn=document.getElementById('theme-btn');
+  if(btn){btn.style.background=t.btnSec;btn.style.color=t.text;btn.style.borderColor=t.border;}
+  const inputs = document.querySelectorAll('input[type=text],input[type=number]');
+  inputs.forEach(inp=>{inp.style.background=t.inputBg;inp.style.borderColor=t.inputBorder;inp.style.color=t.text;});
+  chart.setOption(buildOption(t),true);
+}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);const btn=document.getElementById('theme-btn');if(btn)btn.textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+window.addEventListener('message',function(e){if(e.data&&e.data.type==='setTheme'){mode=e.data.theme;applyTheme(mode);var btn=document.getElementById('theme-btn');if(btn)btn.style.display='none';}});
+chart.setOption(buildOption(THEMES[mode]));
+</script>
+</body>
+</html>

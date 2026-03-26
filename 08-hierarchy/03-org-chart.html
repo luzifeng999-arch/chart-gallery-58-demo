@@ -1,11 +1,144 @@
-﻿<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>组织架构图</title><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script><style>body{margin:0;background:#080C14}#c{width:100vw;height:100vh}</style></head><body><div id="c"></div><script>echarts.init(document.getElementById('c')).setOption({series:[{type:'tree',orient:'vertical',data:[{name:'CEO',children:[{name:'CTO',children:[{name:'研发'},{name:'测试'}]},{name:'CFO'}]}],label:{color:'#C8D4E8'},itemStyle:{color:'#FFB340'}}]});
-window.addEventListener('message', function(e) {
-  if (e.data && e.data.type === 'setTheme') {
-    if (typeof applyTheme === 'function') {
-      mode = e.data.theme;
-      applyTheme(mode);
-    }
-    var btn = document.getElementById('theme-btn');
-    if (btn) btn.style.display = 'none';
-  }
-});</script></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>组织架构图 Org Chart</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--split:#141E30;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--split:#EEF2F7;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}
+.chart-title{font-size:18px;font-weight:700;color:var(--title);padding:4px 0;margin-bottom:4px;outline:none;transition:color .3s}
+.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}
+#chart{flex:1}
+.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:background .3s,border-color .3s}
+.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title);transition:color .3s}
+.editor-header p{font-size:12px;color:var(--label);margin-top:4px;transition:color .3s}
+.editor-body{flex:1;overflow-y:auto;padding:12px 16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--label);font-weight:500;padding:6px 4px;text-align:left;border-bottom:1px solid var(--border);transition:color .3s,border-color .3s}
+td{padding:5px 4px}
+td input{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:12px;outline:none;transition:all .2s}
+td input:focus{border-color:var(--input-focus)}
+.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .2s}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+.add-row{width:100%;margin-top:10px;padding:6px;background:transparent;border:1px dashed var(--border);color:var(--label);border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s}
+.add-row:hover{border-color:var(--input-focus);color:var(--input-focus)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:all .25s}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+.del-btn{background:none;border:none;color:var(--label);cursor:pointer;font-size:14px;padding:0 4px;transition:color .2s}
+.del-btn:hover{color:#FF6B6B}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">公司组织架构图</div>
+  <div class="chart-subtitle">公司各部门及人员层级结构 · 自顶向下展示</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>节点编辑</h3><p>修改节点名称和上级</p></div>
+  <div class="editor-body">
+    <table><thead><tr><th>节点</th><th>职位</th><th></th></tr></thead><tbody id="data-rows"></tbody></table>
+    <button class="add-row" onclick="addRow()">＋ 添加节点</button>
+  </div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const THEMES = {
+  dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',titleColor:'#F0F4FF',textColor:'#C8D4E8',labelColor:'#5A6A84',btnSec:'#1A2236',inputBg:'#080C14',inputBorder:'#1A2236',inputFocus:'#4D9EFF',nodeColors:['#4D9EFF','#30D986','#FFB340','#9B7FFF'],lineColor:'#1A2236'},
+  light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',titleColor:'#0D1525',textColor:'#2D3A4A',labelColor:'#8A9BB0',btnSec:'#F0F4FA',inputBg:'#FFFFFF',inputBorder:'#D9E3EE',inputFocus:'#2B7FFF',nodeColors:['#2B7FFF','#00B96B','#FA8C16','#722ED1'],lineColor:'#C8D4E0'}
+};
+const DEFAULT_DATA = {
+  name:'CEO\n张总',children:[
+    {name:'CTO\n李副总',children:[
+      {name:'技术总监\n王工',children:[{name:'前端主管\n赵楠'},{name:'后端主管\n陈明'}]},
+      {name:'架构师\n孙工'}
+    ]},
+    {name:'COO\n刘副总',children:[
+      {name:'产品总监\n吴总',children:[{name:'产品经理\n钱磊'},{name:'设计主管\n方方'}]},
+      {name:'运营总监\n郑磊'}
+    ]}
+  ]
+};
+let DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let mode = 'dark';
+const chart = echarts.init(document.getElementById('chart'));
+window.addEventListener('resize',()=>chart.resize());
+
+// Flat list for editor
+let FLAT = [
+  {name:'CEO\n张总',parent:'',level:0},
+  {name:'CTO\n李副总',parent:'CEO\n张总',level:1},
+  {name:'COO\n刘副总',parent:'CEO\n张总',level:1},
+  {name:'技术总监\n王工',parent:'CTO\n李副总',level:2},
+  {name:'架构师\n孙工',parent:'CTO\n李副总',level:2},
+  {name:'产品总监\n吴总',parent:'COO\n刘副总',level:2},
+  {name:'运营总监\n郑磊',parent:'COO\n刘副总',level:2},
+  {name:'前端主管\n赵楠',parent:'技术总监\n王工',level:3},
+  {name:'后端主管\n陈明',parent:'技术总监\n王工',level:3},
+  {name:'产品经理\n钱磊',parent:'产品总监\n吴总',level:3},
+  {name:'设计主管\n方方',parent:'产品总监\n吴总',level:3}
+];
+
+function flatToTree(flat) {
+  const map = {};
+  flat.forEach(n=>map[n.name]={name:n.name,children:[]});
+  let root = null;
+  flat.forEach(n=>{
+    if(!n.parent) root=map[n.name];
+    else if(map[n.parent]) map[n.parent].children.push(map[n.name]);
+  });
+  // Remove empty children arrays
+  Object.values(map).forEach(n=>{if(n.children.length===0)delete n.children;});
+  return root;
+}
+
+function buildOption(t) {
+  return {
+    backgroundColor:'transparent',
+    tooltip:{trigger:'item',backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor}},
+    series:[{
+      type:'tree',data:[DATA],
+      top:'5%',left:'10%',bottom:'5%',right:'10%',
+      symbolSize:12,orient:'TB',
+      label:{position:'bottom',rotate:0,verticalAlign:'top',fontSize:11,color:t.textColor,
+        rich:{name:{fontWeight:'bold',color:t.textColor},title:{color:t.labelColor,fontSize:10}}
+      },
+      itemStyle:{color:(p)=>t.nodeColors[p.treeDepth%t.nodeColors.length],borderWidth:0},
+      lineStyle:{color:t.lineColor,width:1.5,curveness:0.5},
+      expandAndCollapse:false
+    }]
+  };
+}
+
+function renderTable(){
+  const t=THEMES[mode];
+  document.getElementById('data-rows').innerHTML=FLAT.map((d,i)=>`<tr>
+    <td><input value="${d.name.replace(/\n/g,' ')}" oninput="FLAT[${i}].name=this.value.replace(' ','\\n')" style="background:${t.inputBg};border-color:${t.inputBorder};color:${t.textColor}"></td>
+    <td><input value="${d.parent.replace(/\n/g,' ')}" oninput="FLAT[${i}].parent=this.value.replace(' ','\\n')" placeholder="根节点留空" style="background:${t.inputBg};border-color:${t.inputBorder};color:${t.textColor}"></td>
+    <td><button class="del-btn" onclick="removeRow(${i})">×</button></td>
+  </tr>`).join('');
+}
+function removeRow(i){FLAT.splice(i,1);renderTable();}
+function addRow(){FLAT.push({name:'新节点',parent:'',level:0});renderTable();}
+function applyData(){DATA=flatToTree(FLAT)||DATA;chart.setOption(buildOption(THEMES[mode]),true);showToast('✓ 已更新');}
+function resetData(){FLAT=JSON.parse(JSON.stringify([{name:'CEO\n张总',parent:'',level:0},{name:'CTO\n李副总',parent:'CEO\n张总',level:1},{name:'COO\n刘副总',parent:'CEO\n张总',level:1},{name:'技术总监\n王工',parent:'CTO\n李副总',level:2},{name:'产品总监\n吴总',parent:'COO\n刘副总',level:2},{name:'前端主管\n赵楠',parent:'技术总监\n王工',level:3},{name:'后端主管\n陈明',parent:'技术总监\n王工',level:3}]));DATA=flatToTree(FLAT);renderTable();chart.setOption(buildOption(THEMES[mode]),true);showToast('↺ 已重置');}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',1800);}
+function applyTheme(m){const t=THEMES[m];document.documentElement.className=m==='light'?'theme-light':'';document.querySelector('.editor').style.background=t.panelBg;document.querySelector('.editor').style.borderColor=t.border;const btn=document.getElementById('theme-btn');if(btn){btn.style.background=t.btnSec;btn.style.color=t.textColor;btn.style.borderColor=t.border;}renderTable();chart.setOption(buildOption(t),true);}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);const btn=document.getElementById('theme-btn');if(btn)btn.textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+window.addEventListener('message',function(e){if(e.data&&e.data.type==='setTheme'){mode=e.data.theme;applyTheme(mode);var btn=document.getElementById('theme-btn');if(btn)btn.style.display='none';}});
+renderTable();chart.setOption(buildOption(THEMES[mode]));
+</script>
+</body>
+</html>

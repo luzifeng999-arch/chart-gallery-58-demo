@@ -1,11 +1,127 @@
-﻿<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>点密度图</title><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script><style>body{margin:0;background:#080C14}#c{width:100vw;height:100vh}</style></head><body><div id="c"></div><script>const d=Array(200).fill(0).map(()=>[Math.random()*100,Math.random()*100]);echarts.init(document.getElementById('c')).setOption({xAxis:{type:'value'},yAxis:{type:'value'},series:[{type:'scatter',data:d,symbolSize:3,itemStyle:{color:'#30D986'}}]});
-window.addEventListener('message', function(e) {
-  if (e.data && e.data.type === 'setTheme') {
-    if (typeof applyTheme === 'function') {
-      mode = e.data.theme;
-      applyTheme(mode);
-    }
-    var btn = document.getElementById('theme-btn');
-    if (btn) btn.style.display = 'none';
-  }
-});</script></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>点密度图 Dot Density</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--split:#141E30;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--split:#EEF2F7;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}
+.chart-title{font-size:18px;font-weight:700;color:var(--title);padding:4px 0;margin-bottom:4px;outline:none;border-bottom:1px solid transparent;transition:color .3s}
+.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}
+#chart{flex:1}
+.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:background .3s,border-color .3s}
+.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title);transition:color .3s}
+.editor-header p{font-size:12px;color:var(--label);margin-top:4px;transition:color .3s}
+.editor-body{flex:1;overflow-y:auto;padding:12px 16px}
+.control-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.control-label{font-size:12px;color:var(--label)}
+.control-row input[type=range]{width:100%;accent-color:var(--input-focus)}
+.control-value{font-size:13px;font-weight:600;color:var(--title)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--label);font-weight:500;padding:6px 4px;text-align:left;border-bottom:1px solid var(--border);transition:color .3s,border-color .3s}
+td{padding:5px 4px}
+td input{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:12px;outline:none;transition:all .2s}
+td input:focus{border-color:var(--input-focus)}
+.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .2s}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:all .25s}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">城市店铺点密度分布</div>
+  <div class="chart-subtitle">各区域商业网点分布密度 · 颜色代表不同区域类型</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>数据编辑</h3><p>调整各区域点数量和分布</p></div>
+  <div class="editor-body">
+    <div class="control-row">
+      <span class="control-label">商业区点数：<span class="control-value" id="v1">120</span></span>
+      <input type="range" min="10" max="300" value="120" id="s1" oninput="document.getElementById('v1').textContent=this.value">
+    </div>
+    <div class="control-row">
+      <span class="control-label">住宅区点数：<span class="control-value" id="v2">80</span></span>
+      <input type="range" min="10" max="300" value="80" id="s2" oninput="document.getElementById('v2').textContent=this.value">
+    </div>
+    <div class="control-row">
+      <span class="control-label">工业区点数：<span class="control-value" id="v3">50</span></span>
+      <input type="range" min="10" max="300" value="50" id="s3" oninput="document.getElementById('v3').textContent=this.value">
+    </div>
+    <div class="control-row">
+      <span class="control-label">点大小：<span class="control-value" id="v4">4</span></span>
+      <input type="range" min="2" max="12" value="4" id="s4" oninput="document.getElementById('v4').textContent=this.value">
+    </div>
+  </div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const THEMES = {
+  dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',split:'#141E30',titleColor:'#F0F4FF',textColor:'#C8D4E8',labelColor:'#5A6A84',btnSec:'#1A2236',inputBg:'#080C14',inputBorder:'#1A2236',inputFocus:'#4D9EFF',c1:'#4D9EFF',c2:'#30D986',c3:'#FFB340'},
+  light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',split:'#EEF2F7',titleColor:'#0D1525',textColor:'#2D3A4A',labelColor:'#8A9BB0',btnSec:'#F0F4FA',inputBg:'#FFFFFF',inputBorder:'#D9E3EE',inputFocus:'#2B7FFF',c1:'#2B7FFF',c2:'#00B96B',c3:'#FA8C16'}
+};
+let mode = 'dark';
+const chart = echarts.init(document.getElementById('chart'));
+window.addEventListener('resize', ()=>chart.resize());
+
+function genPoints(n, cx, cy, spread) {
+  return Array(n).fill(0).map(()=>[cx+(Math.random()-0.5)*spread, cy+(Math.random()-0.5)*spread]);
+}
+
+function buildOption(t) {
+  const n1=+document.getElementById('s1').value;
+  const n2=+document.getElementById('s2').value;
+  const n3=+document.getElementById('s3').value;
+  const sz=+document.getElementById('s4').value;
+  return {
+    backgroundColor:'transparent',
+    legend:{data:['商业区','住宅区','工业区'],textStyle:{color:t.labelColor},top:10},
+    tooltip:{trigger:'item',backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor},formatter:p=>`${p.seriesName}<br/>坐标: (${p.data[0].toFixed(1)}, ${p.data[1].toFixed(1)})`},
+    grid:{left:50,right:20,top:50,bottom:40},
+    xAxis:{type:'value',min:0,max:100,axisLine:{show:false},axisTick:{show:false},axisLabel:{color:t.labelColor},splitLine:{lineStyle:{color:t.split,type:'dashed'}}},
+    yAxis:{type:'value',min:0,max:100,axisLine:{show:false},axisTick:{show:false},axisLabel:{color:t.labelColor},splitLine:{lineStyle:{color:t.split,type:'dashed'}}},
+    series:[
+      {name:'商业区',type:'scatter',data:genPoints(n1,35,65,30),symbolSize:sz,itemStyle:{color:t.c1,opacity:0.7}},
+      {name:'住宅区',type:'scatter',data:genPoints(n2,65,40,35),symbolSize:sz,itemStyle:{color:t.c2,opacity:0.7}},
+      {name:'工业区',type:'scatter',data:genPoints(n3,25,25,20),symbolSize:sz,itemStyle:{color:t.c3,opacity:0.7}}
+    ]
+  };
+}
+
+function applyData(){chart.setOption(buildOption(THEMES[mode]),true);showToast('✓ 已更新');}
+function resetData(){
+  document.getElementById('s1').value=120;document.getElementById('v1').textContent=120;
+  document.getElementById('s2').value=80;document.getElementById('v2').textContent=80;
+  document.getElementById('s3').value=50;document.getElementById('v3').textContent=50;
+  document.getElementById('s4').value=4;document.getElementById('v4').textContent=4;
+  applyData();showToast('↺ 已重置');
+}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',1800);}
+function applyTheme(m){
+  const t=THEMES[m];
+  document.documentElement.className=m==='light'?'theme-light':'';
+  document.querySelector('.editor').style.background=t.panelBg;
+  document.querySelector('.editor').style.borderColor=t.border;
+  const btn=document.getElementById('theme-btn');
+  if(btn){btn.style.background=t.btnSec;btn.style.color=t.textColor;btn.style.borderColor=t.border;}
+  chart.setOption(buildOption(t),true);
+}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);const btn=document.getElementById('theme-btn');if(btn)btn.textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+window.addEventListener('message',function(e){if(e.data&&e.data.type==='setTheme'){mode=e.data.theme;applyTheme(mode);var btn=document.getElementById('theme-btn');if(btn)btn.style.display='none';}});
+applyTheme('dark');
+</script>
+</body>
+</html>
