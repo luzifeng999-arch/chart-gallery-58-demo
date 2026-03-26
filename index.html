@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="0; url=./gallery.html">
+  <title>📊 信息可视化图表库</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #080C14;
+      color: #C8D4E8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .container {
+      text-align: center;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: #F0F4FF;
+    }
+    p {
+      font-size: 18px;
+      margin-bottom: 30px;
+      color: #5A6A84;
+    }
+    a {
+      display: inline-block;
+      padding: 12px 32px;
+      background: #4D9EFF;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    a:hover {
+      background: #2B7FFF;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(77, 158, 255, 0.4);
+    }
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #1A2236;
+      border-top-color: #4D9EFF;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-top: 20px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 图表库</h1>
+    <p>正在跳转到图表库...</p>
+    <div class="spinner"></div>
+    <p style="margin-top: 30px;">
+      如果没有自动跳转，请点击：<br>
+      <a href="./gallery.html">进入图表库 →</a>
+    </p>
+  </div>
+  
+  <script>
+    // 自动跳转
+    setTimeout(() => {
+      window.location.href = './gallery.html';
+    }, 100);
+  </script>
+</body>
+</html>
