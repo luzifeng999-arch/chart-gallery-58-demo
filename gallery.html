@@ -524,6 +524,7 @@ function loadChart(categoryKey, filename, name) {
     try {
       // 获取iframe文档
       const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      const iframeWin = iframe.contentWindow;
       
       // 方法1: 直接隐藏按钮
       const themeBtn = iframeDoc.getElementById('theme-btn');
@@ -536,10 +537,22 @@ function loadChart(categoryKey, filename, name) {
       style.textContent = '#theme-btn { display: none !important; }';
       iframeDoc.head.appendChild(style);
       
-      // 同步当前主题
+      // 同步当前主题 - 调用iframe内的toggleTheme函数
       if (currentTheme === 'light') {
+        // 如果当前是亮色模式，需要切换iframe到亮色
+        if (iframeWin.toggleTheme && typeof iframeWin.mode !== 'undefined') {
+          if (iframeWin.mode === 'dark') {
+            iframeWin.toggleTheme();
+          }
+        }
         iframeDoc.documentElement.classList.add('theme-light');
       } else {
+        // 如果当前是暗色模式，确保iframe也是暗色
+        if (iframeWin.toggleTheme && typeof iframeWin.mode !== 'undefined') {
+          if (iframeWin.mode === 'light') {
+            iframeWin.toggleTheme();
+          }
+        }
         iframeDoc.documentElement.classList.remove('theme-light');
       }
     } catch (e) {
@@ -604,7 +617,18 @@ function toggleTheme() {
   try {
     if (iframe.style.display !== 'none' && iframe.src) {
       const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-      if (iframeDoc) {
+      const iframeWin = iframe.contentWindow;
+      
+      if (iframeDoc && iframeWin) {
+        // 调用iframe内的toggleTheme函数来真正切换主题
+        if (iframeWin.toggleTheme && typeof iframeWin.mode !== 'undefined') {
+          // 检查iframe当前模式是否与gallery目标模式一致
+          if (iframeWin.mode !== currentTheme) {
+            iframeWin.toggleTheme();
+          }
+        }
+        
+        // 同时更新CSS类名（双重保险）
         if (currentTheme === 'light') {
           iframeDoc.documentElement.classList.add('theme-light');
         } else {
