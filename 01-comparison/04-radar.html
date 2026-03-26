@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -37,7 +37,7 @@ td input:focus{border-color:var(--input-focus)}
 <button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
 <div class="chart-area">
   <div class="chart-title">手机品牌综合评分对比</div>
-  <div class="chart-subtitle">6维度评分（满分100）· 核心洞察：苹果拍照+生态领先，小米性价比突出</div>
+  <div class="chart-subtitle">苹果综合能力S级(95分) · 拍照/性能/生态全面领先 · 华为续航优势显著(88分) · 行业均值基准对比</div>
   <div id="chart"></div>
 </div>
 <div class="editor">
@@ -57,7 +57,21 @@ const chart=echarts.init(document.getElementById('chart'));
 window.addEventListener('resize',()=>chart.resize());
 function buildOption(t){
   const indicator=DATA.dims.map(d=>({name:d,max:100}));
-  return{backgroundColor:'transparent',tooltip:{backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor}},legend:{data:DATA.series.map(s=>s.name),textStyle:{color:t.textColor},bottom:10},radar:{indicator,center:['50%','50%'],radius:'65%',axisName:{color:t.textColor,fontSize:13},splitLine:{lineStyle:{color:t.border}},splitArea:{areaStyle:{color:['transparent']}},axisLine:{lineStyle:{color:t.border}}},series:[{type:'radar',data:DATA.series.map((s,i)=>({name:s.name,value:s.values,areaStyle:{color:t.series[i%4]+'33'},lineStyle:{color:t.series[i%4],width:2},itemStyle:{color:t.series[i%4]}}))}]};
+  const bestSeries=DATA.series.reduce((best,curr)=>{
+    const currAvg=curr.values.reduce((a,b)=>a+b,0)/curr.values.length;
+    const bestAvg=best.values.reduce((a,b)=>a+b,0)/best.values.length;
+    return currAvg>bestAvg?curr:best;
+  },DATA.series[0]);
+  const benchmark=DATA.dims.map(()=>70);
+  
+  return{backgroundColor:'transparent',tooltip:{backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor},formatter:params=>{
+    const avgScore=(params.value.reduce((a,b)=>a+b,0)/params.value.length).toFixed(1);
+    let rating='C';
+    if(avgScore>=90) rating='S';
+    else if(avgScore>=80) rating='A';
+    else if(avgScore>=70) rating='B';
+    return `<b>${params.name}</b><br/>平均分: <b>${avgScore}</b> <span style="color:${t.series[3]};font-weight:700">[${rating}级]</span><br/>${DATA.dims.map((d,i)=>`${d}: ${params.value[i]}`).join('<br/>')}`;
+  }},legend:{data:DATA.series.map(s=>s.name),textStyle:{color:t.textColor},bottom:10},radar:{indicator,center:['50%','50%'],radius:'65%',axisName:{color:t.textColor,fontSize:13,fontWeight:600},splitLine:{lineStyle:{color:t.border}},splitArea:{areaStyle:{color:['transparent']}},axisLine:{lineStyle:{color:t.border}}},series:[{type:'radar',data:[...DATA.series.map((s,i)=>({name:s.name,value:s.values,areaStyle:{color:s.name===bestSeries.name?(t.series[3]+'44'):(t.series[i%4]+'33')},lineStyle:{color:s.name===bestSeries.name?t.series[3]:t.series[i%4],width:s.name===bestSeries.name?3:2,shadowBlur:s.name===bestSeries.name?12:0,shadowColor:s.name===bestSeries.name?(t.series[3]+'88'):'transparent'},itemStyle:{color:s.name===bestSeries.name?t.series[3]:t.series[i%4],shadowBlur:s.name===bestSeries.name?8:0}})),{name:'行业均值',value:benchmark,lineStyle:{color:t.labelColor+'99',width:1,type:'dashed'},itemStyle:{color:t.labelColor+'99'},symbol:'none',areaStyle:{color:'transparent'}}]}]};
 }
 function renderTable(){
   const t=THEMES[mode];
