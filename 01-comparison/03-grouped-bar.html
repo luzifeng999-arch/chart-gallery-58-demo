@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -55,7 +55,10 @@ let DATA=JSON.parse(JSON.stringify(DEFAULT)),mode='dark';
 const chart=echarts.init(document.getElementById('chart'));
 window.addEventListener('resize',()=>chart.resize());
 function buildOption(t){
-  return{backgroundColor:'transparent',tooltip:{trigger:'axis',backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor},axisPointer:{type:'shadow'}},legend:{textStyle:{color:t.textColor},top:0,right:20},grid:{left:50,right:20,top:36,bottom:40},xAxis:{type:'category',data:DATA.categories,axisLine:{lineStyle:{color:t.axisBorder}},axisLabel:{color:t.labelColor},axisTick:{show:false}},yAxis:{type:'value',axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:t.split,type:'dashed'}},axisLabel:{color:t.labelColor,formatter:v=>v+'M'}},series:DATA.series.map((s,i)=>({name:s.name,type:'bar',barGap:'10%',data:s.values.map(v=>({value:v,itemStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:t.series[i%4]},{offset:1,color:t.series[i%4]+'55'}]},borderRadius:[3,3,0,0]}})),label:{show:true,position:'top',color:t.labelColor,fontSize:11,formatter:v=>v.value}}))};
+  const maxPerYear=DATA.categories.map((_,ci)=>Math.max(...DATA.series.map(s=>s.values[ci])));
+  const lastYearIdx=DATA.categories.length-1;
+  const bestSeries=DATA.series.reduce((best,curr)=>curr.values[lastYearIdx]>best.values[lastYearIdx]?curr:best,DATA.series[0]);
+  return{backgroundColor:'transparent',tooltip:{trigger:'axis',backgroundColor:t.panelBg,borderColor:t.border,textStyle:{color:t.textColor},axisPointer:{type:'shadow'},formatter:params=>{let s=`<b>${params[0].axisValue}年</b><br/>`;params.forEach(p=>{const prev=DATA.categories.indexOf(params[0].axisValue)>0?DATA.series[p.seriesIndex].values[DATA.categories.indexOf(params[0].axisValue)-1]:p.value;const yoy=((p.value-prev)/prev*100).toFixed(1);s+=`${p.marker}${p.seriesName}: ${p.value}M <span style="color:${yoy>0?'#30D986':'#FF6B6B'}">${yoy>0?'+':''}${yoy}%</span><br/>`});return s}},legend:{textStyle:{color:t.textColor},top:0,right:20},grid:{left:60,right:30,top:40,bottom:50},xAxis:{type:'category',data:DATA.categories,axisLine:{lineStyle:{color:t.axisBorder}},axisLabel:{color:t.labelColor},axisTick:{show:false}},yAxis:{type:'value',max:Math.max(...maxPerYear)*1.2,axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:t.split,type:'dashed'}},axisLabel:{color:t.labelColor,formatter:v=>v+'M'}},series:DATA.series.map((s,i)=>({name:s.name,type:'bar',barGap:'10%',data:s.values.map((v,vi)=>{const isMax=v===maxPerYear[vi];const isBestSeries=s.name===bestSeries.name;return{value:v,itemStyle:{color:isBestSeries?{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:t.series[3]},{offset:1,color:t.series[3]+'66'}]}:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:t.series[i%4]},{offset:1,color:t.series[i%4]+'55'}]},borderRadius:[3,3,0,0],shadowBlur:isMax&&isBestSeries?12:0,shadowColor:isMax&&isBestSeries?(t.series[3]+'88'):'transparent'}}}),label:{show:true,position:'top',color:t.labelColor,fontSize:11,formatter:v=>v.value},markPoint:i===DATA.series.indexOf(bestSeries)?{data:[{coord:[lastYearIdx,bestSeries.values[lastYearIdx]],value:'★ 冠军\n'+bestSeries.values[lastYearIdx]+'M',symbol:'circle',symbolSize:55,itemStyle:{color:t.series[3]+'22',borderColor:t.series[3],borderWidth:2},label:{show:true,formatter:'{c}',color:t.series[3],fontSize:10,fontWeight:600}}]}:{}}))};
 }
 function renderTable(){
   const t=THEMES[mode];
