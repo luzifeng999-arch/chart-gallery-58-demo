@@ -521,44 +521,42 @@ function loadChart(categoryKey, filename, name) {
   
   // 等待iframe加载完成后隐藏其主题按钮并同步主题
   iframe.onload = function() {
-    try {
-      // 获取iframe文档
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-      const iframeWin = iframe.contentWindow;
-      
-      // 方法1: 直接隐藏按钮
-      const themeBtn = iframeDoc.getElementById('theme-btn');
-      if (themeBtn) {
-        themeBtn.style.display = 'none';
-      }
-      
-      // 方法2: 注入CSS样式（更可靠）
-      const style = iframeDoc.createElement('style');
-      style.textContent = '#theme-btn { display: none !important; }';
-      iframeDoc.head.appendChild(style);
-      
-      // 同步当前主题 - 调用iframe内的toggleTheme函数
-      if (currentTheme === 'light') {
-        // 如果当前是亮色模式，需要切换iframe到亮色
-        if (iframeWin.toggleTheme && typeof iframeWin.mode !== 'undefined') {
-          if (iframeWin.mode === 'dark') {
-            iframeWin.toggleTheme();
+    setTimeout(() => {
+      try {
+        // 获取iframe文档
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        const iframeWin = iframe.contentWindow;
+        
+        // 方法1: 直接隐藏按钮
+        const themeBtn = iframeDoc.getElementById('theme-btn');
+        if (themeBtn) {
+          themeBtn.style.display = 'none';
+        }
+        
+        // 方法2: 注入CSS样式（更可靠）
+        const style = iframeDoc.createElement('style');
+        style.textContent = '#theme-btn { display: none !important; }';
+        iframeDoc.head.appendChild(style);
+        
+        // 同步当前主题 - 直接调用applyTheme函数
+        console.log('Gallery theme:', currentTheme, 'Iframe mode:', iframeWin.mode);
+        if (iframeWin.applyTheme && typeof iframeWin.mode !== 'undefined') {
+          if (iframeWin.mode !== currentTheme) {
+            console.log('Syncing theme from', iframeWin.mode, 'to', currentTheme);
+            iframeWin.applyTheme(currentTheme);
+            iframeWin.mode = currentTheme;
+            // 更新按钮文本
+            const btn = iframeDoc.getElementById('theme-btn');
+            if (btn) {
+              btn.textContent = currentTheme === 'dark' ? '☀️ 亮色' : '🌑 暗色';
+            }
           }
         }
-        iframeDoc.documentElement.classList.add('theme-light');
-      } else {
-        // 如果当前是暗色模式，确保iframe也是暗色
-        if (iframeWin.toggleTheme && typeof iframeWin.mode !== 'undefined') {
-          if (iframeWin.mode === 'light') {
-            iframeWin.toggleTheme();
-          }
-        }
-        iframeDoc.documentElement.classList.remove('theme-light');
+      } catch (e) {
+        // 跨域情况下无法访问iframe内容，忽略错误
+        console.error('无法访问iframe内容:', e);
       }
-    } catch (e) {
-      // 跨域情况下无法访问iframe内容，忽略错误
-      console.error('无法访问iframe内容:', e);
-    }
+    }, 100); // 延迟100ms确保iframe内容完全加载
   };
 }
 
@@ -620,19 +618,18 @@ function toggleTheme() {
       const iframeWin = iframe.contentWindow;
       
       if (iframeDoc && iframeWin) {
-        // 调用iframe内的toggleTheme函数来真正切换主题
-        if (iframeWin.toggleTheme && typeof iframeWin.mode !== 'undefined') {
-          // 检查iframe当前模式是否与gallery目标模式一致
-          if (iframeWin.mode !== currentTheme) {
-            iframeWin.toggleTheme();
-          }
-        }
+        console.log('Toggling to:', currentTheme, 'Iframe mode:', iframeWin.mode);
         
-        // 同时更新CSS类名（双重保险）
-        if (currentTheme === 'light') {
-          iframeDoc.documentElement.classList.add('theme-light');
-        } else {
-          iframeDoc.documentElement.classList.remove('theme-light');
+        // 直接调用applyTheme函数并更新mode
+        if (iframeWin.applyTheme && typeof iframeWin.mode !== 'undefined') {
+          iframeWin.mode = currentTheme;
+          iframeWin.applyTheme(currentTheme);
+          
+          // 更新按钮文本
+          const btn = iframeDoc.getElementById('theme-btn');
+          if (btn) {
+            btn.textContent = currentTheme === 'dark' ? '☀️ 亮色' : '🌑 暗色';
+          }
         }
       }
     }
