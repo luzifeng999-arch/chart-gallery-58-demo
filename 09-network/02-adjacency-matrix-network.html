@@ -1,1 +1,11 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>网络邻接矩阵</title><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script><style>body{margin:0;background:#080C14}#c{width:100vw;height:100vh}</style></head><body><div id="c"></div><script>echarts.init(document.getElementById('c')).setOption({xAxis:{type:'category',data:['A','B','C']},yAxis:{type:'category',data:['A','B','C']},visualMap:{min:0,max:1,inRange:{color:['#080C14','#4D9EFF']}},series:[{type:'heatmap',data:[[0,0,0],[0,1,1],[1,0,1],[1,1,0],[2,1,1],[2,2,0]]}]});</script></body></html>
+﻿<!DOCTYPE html><html><head><meta charset="UTF-8"><title>网络邻接矩阵</title><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script><style>body{margin:0;background:#080C14}#c{width:100vw;height:100vh}</style></head><body><div id="c"></div><script>echarts.init(document.getElementById('c')).setOption({xAxis:{type:'category',data:['A','B','C']},yAxis:{type:'category',data:['A','B','C']},visualMap:{min:0,max:1,inRange:{color:['#080C14','#4D9EFF']}},series:[{type:'heatmap',data:[[0,0,0],[0,1,1],[1,0,1],[1,1,0],[2,1,1],[2,2,0]]}]});
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'setTheme') {
+    if (typeof applyTheme === 'function') {
+      mode = e.data.theme;
+      applyTheme(mode);
+    }
+    var btn = document.getElementById('theme-btn');
+    if (btn) btn.style.display = 'none';
+  }
+});</script></body></html>

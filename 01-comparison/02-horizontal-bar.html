@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -74,6 +74,16 @@ function showToast(msg){const el=document.getElementById('toast');el.textContent
 function applyTheme(m){const t=THEMES[m];document.documentElement.className=m==='light'?'theme-light':'';document.querySelector('.editor').style.background=t.panelBg;document.querySelector('.editor').style.borderColor=t.border;const btn=document.getElementById('theme-btn');btn.style.background=t.btnSec;btn.style.color=t.textColor;btn.style.borderColor=t.border;renderTable();chart.setOption(buildOption(t),true);}
 function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);document.getElementById('theme-btn').textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
 renderTable();applyTheme('dark');
-</script>
+
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'setTheme') {
+    if (typeof applyTheme === 'function') {
+      mode = e.data.theme;
+      applyTheme(mode);
+    }
+    var btn = document.getElementById('theme-btn');
+    if (btn) btn.style.display = 'none';
+  }
+});</script>
 </body>
 </html>

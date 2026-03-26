@@ -1,1 +1,11 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>径向树</title><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script><style>body{margin:0;background:#080C14}#c{width:100vw;height:100vh}</style></head><body><div id="c"></div><script>echarts.init(document.getElementById('c')).setOption({series:[{type:'tree',layout:'radial',data:[{name:'root',children:[{name:'c1'},{name:'c2'},{name:'c3'}]}],label:{color:'#C8D4E8'}}]});</script></body></html>
+﻿<!DOCTYPE html><html><head><meta charset="UTF-8"><title>径向树</title><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script><style>body{margin:0;background:#080C14}#c{width:100vw;height:100vh}</style></head><body><div id="c"></div><script>echarts.init(document.getElementById('c')).setOption({series:[{type:'tree',layout:'radial',data:[{name:'root',children:[{name:'c1'},{name:'c2'},{name:'c3'}]}],label:{color:'#C8D4E8'}}]});
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'setTheme') {
+    if (typeof applyTheme === 'function') {
+      mode = e.data.theme;
+      applyTheme(mode);
+    }
+    var btn = document.getElementById('theme-btn');
+    if (btn) btn.style.display = 'none';
+  }
+});</script></body></html>

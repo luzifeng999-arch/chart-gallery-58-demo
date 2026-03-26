@@ -1,1 +1,11 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>树图 Tree</title><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script><style>body{margin:0;background:#080C14}#c{width:100vw;height:100vh}</style></head><body><div id="c"></div><script>echarts.init(document.getElementById('c')).setOption({series:[{type:'tree',data:[{name:'根节点',children:[{name:'子节点1',children:[{name:'叶子1'},{name:'叶子2'}]},{name:'子节点2'}]}],label:{color:'#C8D4E8'},itemStyle:{color:'#4D9EFF'}}]});</script></body></html>
+﻿<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>树图 Tree</title><script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script><style>body{margin:0;background:#080C14}#c{width:100vw;height:100vh}</style></head><body><div id="c"></div><script>echarts.init(document.getElementById('c')).setOption({series:[{type:'tree',data:[{name:'根节点',children:[{name:'子节点1',children:[{name:'叶子1'},{name:'叶子2'}]},{name:'子节点2'}]}],label:{color:'#C8D4E8'},itemStyle:{color:'#4D9EFF'}}]});
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'setTheme') {
+    if (typeof applyTheme === 'function') {
+      mode = e.data.theme;
+      applyTheme(mode);
+    }
+    var btn = document.getElementById('theme-btn');
+    if (btn) btn.style.display = 'none';
+  }
+});</script></body></html>
