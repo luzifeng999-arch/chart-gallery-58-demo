@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>波特五力模型 Porter's Five Forces</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0;align-items:center;justify-content:center;position:relative}
+.chart-title{font-size:18px;font-weight:700;color:var(--title);margin-bottom:4px;outline:none;width:100%;text-align:center}
+.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:20px;text-align:center}
+#five-forces{width:100%;max-width:700px;height:500px;position:relative}
+.force-card{position:absolute;background:var(--panel-bg);border:1.5px solid;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;transition:all .3s;cursor:default}
+.force-card:hover{transform:scale(1.02);z-index:10}
+.force-badge{font-size:10px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:99px;width:fit-content}
+.force-name{font-size:13px;font-weight:700;color:var(--title)}
+.force-level{font-size:11px;font-weight:600}
+.force-items{font-size:11px;color:var(--label);line-height:1.7}
+.force-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel-bg);border:2px solid;border-radius:50%;width:130px;height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px}
+.center-icon{font-size:24px}
+.center-title{font-size:12px;font-weight:700;color:var(--title);line-height:1.3}
+.center-sub{font-size:10px;color:var(--label)}
+/* Arrows */
+.arrow{position:absolute;pointer-events:none}
+.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}
+.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:4px}
+.editor-body{flex:1;overflow-y:auto;padding:12px 16px}
+.force-edit{margin-bottom:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.force-edit-hdr{padding:8px 12px;font-size:12px;font-weight:700;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.force-edit-body{padding:8px 12px}
+.edit-row{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.edit-label{font-size:11px;color:var(--label)}
+.edit-input{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:5px 7px;border-radius:4px;font-size:12px;outline:none}
+.edit-input:focus{border-color:var(--input-focus)}
+select.edit-input{cursor:pointer}
+.edit-textarea{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:5px 7px;border-radius:4px;font-size:11px;outline:none;resize:none;height:70px;font-family:inherit;line-height:1.6}
+.edit-textarea:focus{border-color:var(--input-focus)}
+.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border)}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">新能源汽车行业波特五力分析</div>
+  <div class="chart-subtitle">Porter's Five Forces · 行业竞争格局五维度量化评估</div>
+  <div id="five-forces"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>五力编辑</h3><p>设置每个力的内容和强度</p></div>
+  <div class="editor-body" id="editor-body"></div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+// position: top, right, bottom-right, bottom-left, left
+const FORCES_DEF = [
+  {key:'supplier', pos:'top', label:'供应商议价力', icon:'🏭'},
+  {key:'buyer',    pos:'right', label:'买方议价力', icon:'🛒'},
+  {key:'new',      pos:'bottom_right', label:'新进入者威胁', icon:'🚀'},
+  {key:'sub',      pos:'bottom_left', label:'替代品威胁', icon:'🔄'},
+  {key:'rivalry',  pos:'left', label:'现有竞争者', icon:'⚔️'}
+];
+const LEVELS = {high:'高', medium:'中', low:'低'};
+const LEVEL_COLORS = {
+  dark:{high:'#FF6B6B',medium:'#FFB340',low:'#30D986'},
+  light:{high:'#F5222D',medium:'#FA8C16',low:'#00B96B'}
+};
+const DEFAULT_DATA = {
+  supplier:{name:'供应商议价力',level:'medium',items:'动力电池占成本40%，宁德时代话语权强\n稀土材料供应集中，替代成本高\n芯片供应链断链风险仍存'},
+  buyer:{name:'买方议价力',level:'high',items:'消费者价格敏感度持续上升\n可选品牌增加，比价能力强\n大客户（出行公司）议价强势'},
+  new:{name:'新进入者威胁',level:'medium',items:'资本门槛极高（100亿以上）\n小米等科技巨头跨界进入\n华为赋能模式降低造车门槛'},
+  sub:{name:'替代品威胁',level:'low',items:'氢燃料电池路线竞争\n城市出行微出行替代\n自动驾驶共享出行兴起'},
+  rivalry:{name:'现有竞争者',level:'high',items:'国内：比亚迪、理想、蔚来激烈拼杀\n国际：特斯拉持续降价施压\n价格战导致毛利率全面压缩'}
+};
+let DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let mode = 'dark';
+
+const POSITIONS = {
+  top:       {w:200,h:120,left:'calc(50% - 100px)',top:'0'},
+  right:     {w:200,h:120,right:'0',top:'calc(50% - 60px)',left:'auto'},
+  bottom_right:{w:200,h:110,right:'0',bottom:'0',left:'auto',top:'auto'},
+  bottom_left: {w:200,h:110,left:'0',bottom:'0',top:'auto'},
+  left:      {w:200,h:120,left:'0',top:'calc(50% - 60px)'}
+};
+
+function getLevelColor(level) {
+  return LEVEL_COLORS[mode][level] || LEVEL_COLORS[mode].medium;
+}
+
+function renderForces() {
+  const container = document.getElementById('five-forces');
+  const centerColor = mode === 'dark' ? '#4D9EFF' : '#2B7FFF';
+  let html = '';
+
+  FORCES_DEF.forEach(f => {
+    const d = DATA[f.key];
+    const pos = POSITIONS[f.pos];
+    const color = getLevelColor(d.level);
+    let style = `width:${pos.w}px;`;
+    if (pos.left !== 'auto' && pos.left !== undefined) style += `left:${pos.left};`;
+    if (pos.right) style += `right:${pos.right};`;
+    if (pos.top !== 'auto' && pos.top !== undefined) style += `top:${pos.top};`;
+    if (pos.bottom) style += `bottom:${pos.bottom};`;
+    if (pos.left === 'auto') style += `left:auto;`;
+    if (pos.top === 'auto') style += `top:auto;`;
+
+    const itemLines = d.items.split('\n').slice(0, 3).map(s => s.trim()).filter(Boolean);
+
+    html += `<div class="force-card" style="${style}border-color:${color}33">
+      <span class="force-badge" style="background:${color}20;color:${color}">${f.icon} ${LEVELS[d.level]}压力</span>
+      <div class="force-name">${f.label}</div>
+      <div class="force-items">${itemLines.map(s => `• ${s}`).join('<br>')}</div>
+    </div>`;
+  });
+
+  // Center
+  html += `<div class="force-center" style="border-color:${centerColor}55">
+    <span class="center-icon">🏎</span>
+    <div class="center-title">行业<br>竞争</div>
+    <div class="center-sub">五力综合</div>
+  </div>`;
+
+  // Simple arrows (SVG overlay)
+  html += `<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="${mode === 'dark' ? '#243048' : '#C8D4E0'}"/></marker></defs>
+    <line x1="50%" y1="120" x2="50%" y2="190" stroke="${mode === 'dark' ? '#243048' : '#C8D4E0'}" stroke-width="2" marker-end="url(#arr)"/>
+    <line x1="500" y1="50%" x2="420" y2="50%" stroke="${mode === 'dark' ? '#243048' : '#C8D4E0'}" stroke-width="2" marker-end="url(#arr)"/>
+    <line x1="0" y1="50%" x2="80" y2="50%" stroke="${mode === 'dark' ? '#243048' : '#C8D4E0'}" stroke-width="2" marker-end="url(#arr)"/>
+    <line x1="500" y1="390" x2="420" y2="330" stroke="${mode === 'dark' ? '#243048' : '#C8D4E0'}" stroke-width="2" marker-end="url(#arr)"/>
+    <line x1="0" y1="390" x2="80" y2="330" stroke="${mode === 'dark' ? '#243048' : '#C8D4E0'}" stroke-width="2" marker-end="url(#arr)"/>
+  </svg>`;
+
+  container.innerHTML = html;
+}
+
+function renderEditor() {
+  document.getElementById('editor-body').innerHTML = FORCES_DEF.map(f => {
+    const d = DATA[f.key];
+    const color = getLevelColor(d.level);
+    return `<div class="force-edit">
+      <div class="force-edit-hdr" style="background:${color}15;color:${color}">${f.icon} ${f.label}</div>
+      <div class="force-edit-body">
+        <div class="edit-row">
+          <span class="edit-label">压力强度</span>
+          <select class="edit-input" onchange="DATA['${f.key}'].level=this.value">
+            <option value="high" ${d.level==='high'?'selected':''}>高</option>
+            <option value="medium" ${d.level==='medium'?'selected':''}>中</option>
+            <option value="low" ${d.level==='low'?'selected':''}>低</option>
+          </select>
+        </div>
+        <div class="edit-row">
+          <span class="edit-label">关键因素（每行一条，最多3条）</span>
+          <textarea class="edit-textarea" oninput="DATA['${f.key}'].items=this.value">${d.items}</textarea>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function applyData() { renderForces(); showToast('✓ 已更新'); }
+function resetData() { DATA = JSON.parse(JSON.stringify(DEFAULT_DATA)); renderEditor(); renderForces(); showToast('↺ 已重置'); }
+function showToast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.style.opacity = '1'; setTimeout(() => el.style.opacity = '0', 1800); }
+function applyTheme(m) {
+  document.documentElement.className = m === 'light' ? 'theme-light' : '';
+  document.querySelector('.editor').style.background = m === 'light' ? '#FFFFFF' : '#0E1420';
+  document.querySelector('.editor').style.borderColor = m === 'light' ? '#E1E8F0' : '#1A2236';
+  const btn = document.getElementById('theme-btn');
+  if (btn) { btn.style.background = m === 'light' ? '#F0F4FA' : '#1A2236'; btn.style.color = m === 'light' ? '#2D3A4A' : '#C8D4E8'; btn.style.borderColor = m === 'light' ? '#E1E8F0' : '#1A2236'; }
+  renderEditor(); renderForces();
+}
+function toggleTheme() { mode = mode === 'dark' ? 'light' : 'dark'; applyTheme(mode); const btn = document.getElementById('theme-btn'); if (btn) btn.textContent = mode === 'dark' ? '☀️ 亮色' : '🌑 暗色'; }
+window.addEventListener('message', function(e) { if (e.data && e.data.type === 'setTheme') { mode = e.data.theme; applyTheme(mode); var btn = document.getElementById('theme-btn'); if (btn) btn.style.display = 'none'; } });
+renderForces(); renderEditor();
+</script>
+</body>
+</html>

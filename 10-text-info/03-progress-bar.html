@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>进度条 Progress Bar</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF;--positive:#30D986;--negative:#FF6B6B;--warning:#FFB340}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF;--positive:#00B96B;--negative:#F5222D;--warning:#FA8C16}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:24px 32px;min-width:0;overflow-y:auto}
+.chart-title{font-size:18px;font-weight:700;color:var(--title);padding:4px 0;margin-bottom:4px;outline:none;transition:color .3s}
+.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:28px}
+.metrics-grid{display:flex;flex-direction:column;gap:20px;width:100%}
+.metric-item{width:100%}
+.metric-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.metric-name{font-size:14px;font-weight:600;color:var(--text)}
+.metric-values{display:flex;align-items:baseline;gap:8px}
+.metric-current{font-size:22px;font-weight:700;color:var(--title)}
+.metric-target{font-size:12px;color:var(--label)}
+.metric-trend{font-size:12px;font-weight:600}
+.trend-up{color:var(--positive)}
+.trend-down{color:var(--negative)}
+.progress-track{height:10px;background:var(--border);border-radius:99px;overflow:hidden;position:relative}
+.progress-fill{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1);position:relative}
+.progress-fill::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:14px;height:14px;border-radius:50%;background:inherit;border:2px solid var(--bg);margin-right:-4px;box-shadow:0 0 6px rgba(0,0,0,.3)}
+.progress-labels{display:flex;justify-content:space-between;margin-top:6px}
+.progress-labels span{font-size:11px;color:var(--label)}
+.progress-pct{font-size:13px;font-weight:600;color:var(--title)}
+.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:background .3s,border-color .3s}
+.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:4px}
+.editor-body{flex:1;overflow-y:auto;padding:12px 16px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{color:var(--label);font-weight:500;padding:5px 3px;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:4px 3px}
+td input{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:3px 5px;border-radius:4px;font-size:11px;outline:none}
+td input:focus{border-color:var(--input-focus)}
+.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .2s}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+.add-row{width:100%;margin-top:8px;padding:6px;background:transparent;border:1px dashed var(--border);color:var(--label);border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s}
+.add-row:hover{border-color:var(--input-focus);color:var(--input-focus)}
+.del-btn{background:none;border:none;color:var(--label);cursor:pointer;font-size:14px;padding:0}
+.del-btn:hover{color:#FF6B6B}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:all .25s}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+.insight-box{background:rgba(77,158,255,0.08);border:1px solid rgba(77,158,255,0.2);border-radius:8px;padding:10px 12px;margin-bottom:16px}
+.insight-box p{font-size:12px;color:var(--text);line-height:1.6}
+.insight-title{font-size:11px;color:#4D9EFF;font-weight:600;margin-bottom:4px}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">Q4战略目标达成进度</div>
+  <div class="chart-subtitle">2024年Q4各关键业务指标实时达成情况 · 截至2024年11月30日</div>
+  <div class="metrics-grid" id="metrics-container"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>数据编辑</h3><p>设置指标名称、当前值、目标值</p></div>
+  <div class="editor-body">
+    <div class="insight-box">
+      <div class="insight-title">💡 核心洞察</div>
+      <p>收入指标超额完成8%；用户增长接近目标（95%）；客户满意度需重点关注，仅完成78%。</p>
+    </div>
+    <table>
+      <thead><tr><th>指标名称</th><th>当前值</th><th>目标</th><th>单位</th><th></th></tr></thead>
+      <tbody id="data-rows"></tbody>
+    </table>
+    <button class="add-row" onclick="addRow()">＋ 添加指标</button>
+  </div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const THEMES = {
+  dark:{positive:'#30D986',warning:'#FFB340',negative:'#FF6B6B',btnSec:'#1A2236',inputBg:'#080C14',inputBorder:'#1A2236',inputFocus:'#4D9EFF',textColor:'#C8D4E8'},
+  light:{positive:'#00B96B',warning:'#FA8C16',negative:'#F5222D',btnSec:'#F0F4FA',inputBg:'#FFFFFF',inputBorder:'#D9E3EE',inputFocus:'#2B7FFF',textColor:'#2D3A4A'}
+};
+
+// name, current, target, unit, trend
+const DEFAULT_DATA = [
+  {name:'季度营收', current:108, target:100, unit:'%', trend:'+8%', color:'#30D986'},
+  {name:'新增用户', current:47.5, target:50, unit:'万', trend:'+12.3%', color:'#4D9EFF'},
+  {name:'活跃率', current:62, target:70, unit:'%', trend:'-2.1%', color:'#FFB340'},
+  {name:'客户满意度', current:78, target:100, unit:'NPS', trend:'-5pts', color:'#FF6B6B'},
+  {name:'市场占有率', current:23.5, target:25, unit:'%', trend:'+1.8%', color:'#9B7FFF'}
+];
+let DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let mode = 'dark';
+
+function getBarColor(pct) {
+  if (pct >= 100) return THEMES[mode].positive;
+  if (pct >= 80) return THEMES[mode].warning;
+  return THEMES[mode].negative;
+}
+
+function renderMetrics() {
+  document.getElementById('metrics-container').innerHTML = DATA.map(d => {
+    const pct = Math.min((d.current / d.target) * 100, 120);
+    const barPct = Math.min(pct, 100);
+    const color = getBarColor(pct);
+    const trendClass = d.trend.startsWith('+') ? 'trend-up' : 'trend-down';
+    const trendIcon = d.trend.startsWith('+') ? '↗' : '↘';
+    return `<div class="metric-item">
+      <div class="metric-header">
+        <span class="metric-name">${d.name}</span>
+        <div class="metric-values">
+          <span class="metric-current">${d.current}<small style="font-size:13px;font-weight:400;color:var(--label)">${d.unit}</small></span>
+          <span class="metric-target">/ ${d.target}${d.unit}</span>
+          <span class="metric-trend ${trendClass}">${trendIcon} ${d.trend}</span>
+        </div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width:${barPct}%;background:${color}"></div>
+      </div>
+      <div class="progress-labels">
+        <span>0</span>
+        <span class="progress-pct" style="color:${color}">${pct.toFixed(1)}%</span>
+        <span>${d.target}${d.unit} 目标</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTable() {
+  const t = THEMES[mode];
+  document.getElementById('data-rows').innerHTML = DATA.map((d, i) => `<tr>
+    <td><input value="${d.name}" oninput="DATA[${i}].name=this.value" style="background:${t.inputBg};border-color:${t.inputBorder};color:${t.textColor}"></td>
+    <td><input type="number" step="0.1" value="${d.current}" oninput="DATA[${i}].current=+this.value" style="width:48px;background:${t.inputBg};border-color:${t.inputBorder};color:${t.textColor}"></td>
+    <td><input type="number" step="0.1" value="${d.target}" oninput="DATA[${i}].target=+this.value" style="width:48px;background:${t.inputBg};border-color:${t.inputBorder};color:${t.textColor}"></td>
+    <td><input value="${d.unit}" oninput="DATA[${i}].unit=this.value" style="width:36px;background:${t.inputBg};border-color:${t.inputBorder};color:${t.textColor}"></td>
+    <td><button class="del-btn" onclick="removeRow(${i})">×</button></td>
+  </tr>`).join('');
+}
+function removeRow(i) { DATA.splice(i, 1); renderTable(); renderMetrics(); }
+function addRow() { DATA.push({name:'新指标', current:75, target:100, unit:'%', trend:'+0%', color:'#4D9EFF'}); renderTable(); renderMetrics(); }
+function applyData() { renderMetrics(); showToast('✓ 已更新'); }
+function resetData() { DATA = JSON.parse(JSON.stringify(DEFAULT_DATA)); renderTable(); renderMetrics(); showToast('↺ 已重置'); }
+function showToast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.style.opacity = '1'; setTimeout(() => el.style.opacity = '0', 1800); }
+function applyTheme(m) {
+  document.documentElement.className = m === 'light' ? 'theme-light' : '';
+  const t = THEMES[m];
+  document.querySelector('.editor').style.background = m === 'light' ? '#FFFFFF' : '#0E1420';
+  document.querySelector('.editor').style.borderColor = m === 'light' ? '#E1E8F0' : '#1A2236';
+  const btn = document.getElementById('theme-btn');
+  if (btn) { btn.style.background = t.btnSec; btn.style.color = t.textColor; btn.style.borderColor = m === 'light' ? '#E1E8F0' : '#1A2236'; }
+  renderTable(); renderMetrics();
+}
+function toggleTheme() { mode = mode === 'dark' ? 'light' : 'dark'; applyTheme(mode); const btn = document.getElementById('theme-btn'); if (btn) btn.textContent = mode === 'dark' ? '☀️ 亮色' : '🌑 暗色'; }
+window.addEventListener('message', function(e) { if (e.data && e.data.type === 'setTheme') { mode = e.data.theme; applyTheme(mode); var btn = document.getElementById('theme-btn'); if (btn) btn.style.display = 'none'; } });
+renderTable(); renderMetrics();
+</script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>连接散点图 Connected Scatter</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--split:#141E30;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--split:#EEF2F7;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}
+.chart-title{font-size:18px;font-weight:700;color:var(--title);padding:4px 0;margin-bottom:4px;outline:none;transition:color .3s}
+.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}
+#chart{flex:1}
+.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:background .3s,border-color .3s}
+.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:4px}
+.editor-body{flex:1;overflow-y:auto;padding:12px 16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--label);font-weight:500;padding:6px 4px;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:4px 2px}
+td input{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 5px;border-radius:4px;font-size:12px;outline:none;transition:all .2s}
+td input:focus{border-color:var(--input-focus)}
+.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .2s}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+.add-row{width:100%;margin-top:8px;padding:6px;background:transparent;border:1px dashed var(--border);color:var(--label);border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s}
+.add-row:hover{border-color:var(--input-focus);color:var(--input-focus)}
+.del-btn{background:none;border:none;color:var(--label);cursor:pointer;font-size:14px;padding:0}
+.del-btn:hover{color:#FF6B6B}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:all .25s}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+.insight-box{background:rgba(77,158,255,0.08);border:1px solid rgba(77,158,255,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+.insight-box p{font-size:12px;color:var(--text);line-height:1.6}
+.insight-title{font-size:11px;color:#4D9EFF;font-weight:600;margin-bottom:4px}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">GDP增速 vs 通货膨胀率路径追踪</div>
+  <div class="chart-subtitle">2014-2024年宏观经济两变量演变轨迹 · 连线按时间顺序 · 数字标注年份</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>数据编辑</h3><p>X轴、Y轴、时间标签三维数据</p></div>
+  <div class="editor-body">
+    <div class="insight-box">
+      <div class="insight-title">💡 核心洞察</div>
+      <p>2014-2018年GDP增速缓步下行同时通胀受控；2020年新冠冲击GDP暴降；2021-2023年强力反弹，形成顺时针路径环。</p>
+    </div>
+    <table>
+      <thead><tr><th>时间</th><th>X轴</th><th>Y轴</th><th></th></tr></thead>
+      <tbody id="data-rows"></tbody>
+    </table>
+    <button class="add-row" onclick="addRow()">＋ 添加数据点</button>
+  </div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const THEMES = {
+  dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',split:'#141E30',titleColor:'#F0F4FF',textColor:'#C8D4E8',labelColor:'#5A6A84',btnSec:'#1A2236',inputBg:'#080C14',inputBorder:'#1A2236',inputFocus:'#4D9EFF',lineColor:'#4D9EFF',dotColor:'#30D986',startColor:'#FFB340',endColor:'#FF6B6B'},
+  light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',split:'#EEF2F7',titleColor:'#0D1525',textColor:'#2D3A4A',labelColor:'#8A9BB0',btnSec:'#F0F4FA',inputBg:'#FFFFFF',inputBorder:'#D9E3EE',inputFocus:'#2B7FFF',lineColor:'#2B7FFF',dotColor:'#00B96B',startColor:'#FA8C16',endColor:'#F5222D'}
+};
+
+// [year, gdp_growth%, inflation%]
+const DEFAULT_DATA = [
+  ['2014', 7.3, 2.1],['2015', 6.9, 1.5],['2016', 6.7, 2.0],['2017', 6.9, 1.6],
+  ['2018', 6.6, 2.1],['2019', 6.1, 2.9],['2020', 2.2, 2.5],['2021', 8.1, 0.9],
+  ['2022', 3.0, 2.0],['2023', 5.2, 0.2],['2024', 5.0, 0.5]
+];
+let DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let mode = 'dark';
+const chart = echarts.init(document.getElementById('chart'));
+window.addEventListener('resize', () => chart.resize());
+
+function buildOption(t) {
+  const n = DATA.length;
+  const pts = DATA.map(d => [d[1], d[2]]);
+
+  // Color gradient along the path (time)
+  const gradientData = pts.map((p, i) => ({
+    value: p,
+    itemStyle: {
+      color: i === 0 ? t.startColor : i === n - 1 ? t.endColor : t.dotColor,
+      borderColor: i === 0 ? t.startColor : i === n - 1 ? t.endColor : t.lineColor,
+      borderWidth: i === 0 || i === n - 1 ? 3 : 1.5
+    },
+    symbolSize: i === 0 || i === n - 1 ? 16 : 10,
+    label: {
+      show: true,
+      formatter: DATA[i][0],
+      color: t.labelColor,
+      fontSize: 10,
+      offset: i % 2 === 0 ? [0, -16] : [0, 14]
+    }
+  }));
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: t.panelBg,
+      borderColor: t.border,
+      textStyle: { color: t.textColor },
+      formatter: p => {
+        const d = DATA[p.dataIndex];
+        return `<b>${d[0]}年</b><br/>GDP增速: ${d[1]}%<br/>通货膨胀: ${d[2]}%`;
+      }
+    },
+    grid: { left: 60, right: 30, top: 40, bottom: 50 },
+    xAxis: {
+      type: 'value',
+      name: 'GDP增速 (%)',
+      nameTextStyle: { color: t.labelColor },
+      axisLine: { lineStyle: { color: t.border } },
+      axisLabel: { color: t.labelColor, formatter: v => v + '%' },
+      splitLine: { lineStyle: { color: t.split, type: 'dashed' } }
+    },
+    yAxis: {
+      type: 'value',
+      name: '通货膨胀率 (%)',
+      nameTextStyle: { color: t.labelColor },
+      axisLine: { lineStyle: { color: t.border } },
+      axisLabel: { color: t.labelColor, formatter: v => v + '%' },
+      splitLine: { lineStyle: { color: t.split, type: 'dashed' } }
+    },
+    series: [
+      {
+        type: 'line',
+        data: pts,
+        symbol: 'none',
+        lineStyle: {
+          color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0, colorStops: [{ offset: 0, color: t.startColor }, { offset: 1, color: t.endColor }] },
+          width: 2,
+          curveness: 0.3
+        },
+        smooth: 0.3
+      },
+      {
+        type: 'scatter',
+        data: gradientData,
+        label: { show: true }
+      }
+    ]
+  };
+}
+
+function renderTable() {
+  const t = THEMES[mode];
+  document.getElementById('data-rows').innerHTML = DATA.map((d, i) => `<tr>
+    <td><input value="${d[0]}" oninput="DATA[${i}][0]=this.value" style="width:44px;background:${t.inputBg};border-color:${t.inputBorder};color:${t.textColor}"></td>
+    <td><input type="number" step="0.1" value="${d[1]}" oninput="DATA[${i}][1]=+this.value" style="width:52px;background:${t.inputBg};border-color:${t.inputBorder};color:${t.textColor}"></td>
+    <td><input type="number" step="0.1" value="${d[2]}" oninput="DATA[${i}][2]=+this.value" style="width:52px;background:${t.inputBg};border-color:${t.inputBorder};color:${t.textColor}"></td>
+    <td><button class="del-btn" onclick="removeRow(${i})">×</button></td>
+  </tr>`).join('');
+}
+function removeRow(i) { DATA.splice(i, 1); renderTable(); }
+function addRow() { DATA.push(['2025', 5.0, 1.0]); renderTable(); }
+function applyData() { chart.setOption(buildOption(THEMES[mode]), true); showToast('✓ 已更新'); }
+function resetData() { DATA = JSON.parse(JSON.stringify(DEFAULT_DATA)); renderTable(); applyData(); showToast('↺ 已重置'); }
+function showToast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.style.opacity = '1'; setTimeout(() => el.style.opacity = '0', 1800); }
+function applyTheme(m) {
+  const t = THEMES[m];
+  document.documentElement.className = m === 'light' ? 'theme-light' : '';
+  document.querySelector('.editor').style.background = t.panelBg;
+  document.querySelector('.editor').style.borderColor = t.border;
+  const btn = document.getElementById('theme-btn');
+  if (btn) { btn.style.background = t.btnSec; btn.style.color = t.textColor; btn.style.borderColor = t.border; }
+  renderTable(); chart.setOption(buildOption(t), true);
+}
+function toggleTheme() { mode = mode === 'dark' ? 'light' : 'dark'; applyTheme(mode); const btn = document.getElementById('theme-btn'); if (btn) btn.textContent = mode === 'dark' ? '☀️ 亮色' : '🌑 暗色'; }
+window.addEventListener('message', function(e) { if (e.data && e.data.type === 'setTheme') { mode = e.data.theme; applyTheme(mode); var btn = document.getElementById('theme-btn'); if (btn) btn.style.display = 'none'; } });
+renderTable();
+chart.setOption(buildOption(THEMES[mode]));
+</script>
+</body>
+</html>

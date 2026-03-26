@@ -3,589 +3,389 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>58种信息可视化图表完整图库 - Chart Gallery</title>
+<title>69种信息可视化图表完整图库 - Chart Gallery</title>
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-:root {
-  --bg: #080C14;
-  --panel-bg: #0E1420;
-  --border: #1A2236;
-  --title: #F0F4FF;
-  --text: #C8D4E8;
-  --label: #5A6A84;
-  --primary: #4D9EFF;
-  --hover: #1A2236;
-}
-
-.theme-light {
-  --bg: #F5F7FA;
-  --panel-bg: #FFFFFF;
-  --border: #E1E8F0;
-  --title: #0D1525;
-  --text: #2D3A4A;
-  --label: #8A9BB0;
-  --primary: #2B7FFF;
-  --hover: #F0F4FA;
-}
-
-body {
-  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  transition: background 0.3s, color 0.3s;
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* 左侧导航 */
-.sidebar {
-  width: 280px;
-  background: var(--panel-bg);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.sidebar-header h1 {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--title);
-  margin-bottom: 6px;
-}
-
-.sidebar-header p {
-  font-size: 12px;
-  color: var(--label);
-  line-height: 1.6;
-}
-
-.search-box {
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-  font-size: 13px;
-  outline: none;
-}
-
-.search-box input:focus {
-  border-color: var(--primary);
-}
-
-.chart-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px 0;
-}
-
-.category {
-  margin-bottom: 8px;
-}
-
-.category-title {
-  padding: 8px 20px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--label);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.category-title:hover {
-  color: var(--primary);
-}
-
-.category-icon {
-  font-size: 10px;
-  transition: transform 0.2s;
-}
-
-.category.collapsed .category-icon {
-  transform: rotate(-90deg);
-}
-
-.category-items {
-  padding: 0 12px;
-  max-height: 1000px;
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-}
-
-.category.collapsed .category-items {
-  max-height: 0;
-}
-
-.chart-item {
-  padding: 10px 12px;
-  margin: 2px 0;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: background 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.chart-item:hover {
-  background: var(--hover);
-}
-
-.chart-item.active {
-  background: var(--primary);
-  color: #fff;
-  font-weight: 600;
-}
-
-.chart-number {
-  font-size: 11px;
-  opacity: 0.6;
-  min-width: 24px;
-}
-
-/* 主内容区 */
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.top-bar {
-  padding: 16px 24px;
-  background: var(--panel-bg);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--label);
-}
-
-.breadcrumb-current {
-  color: var(--title);
-  font-weight: 600;
-}
-
-.top-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.btn {
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-  transition: all 0.2s;
-}
-
-.btn:hover {
-  background: var(--hover);
-  border-color: var(--primary);
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-}
-
-/* Iframe 容器 */
-.chart-viewer {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-
-.chart-viewer iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: var(--bg);
-}
-
-/* 隐藏iframe内图表的主题切换按钮（通过iframe加载时） */
-.chart-viewer iframe {
-  /* CSS无法直接隐藏iframe内元素，需通过JS注入样式或postMessage */
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--label);
-  font-size: 14px;
-}
-
-.empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.3;
-}
-
-/* 滚动条样式 */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--label);
-}
-
-/* 响应式 */
-@media (max-width: 768px) {
-  .sidebar {
-    width: 240px;
-  }
-  
-  .top-bar {
-    padding: 12px 16px;
-  }
-}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--primary:#4D9EFF;--hover:#1A2236;--split:#141E30}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--primary:#2B7FFF;--hover:#F0F4FA;--split:#EEF2F7}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;display:flex;height:100vh;overflow:hidden}
+.sidebar{width:288px;background:var(--panel-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-header{padding:18px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sidebar-header h1{font-size:16px;font-weight:700;color:var(--title);margin-bottom:4px}
+.sidebar-header p{font-size:11px;color:var(--label);line-height:1.5}
+.search-box{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.search-box input{width:100%;padding:7px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;outline:none}
+.search-box input:focus{border-color:var(--primary)}
+.chart-list{flex:1;overflow-y:auto;padding:8px 0}
+/* 分类 */
+.category{margin-bottom:2px}
+.category-title{padding:7px 16px;font-size:12px;font-weight:700;color:var(--label);cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:.3px;transition:color .2s;user-select:none}
+.category-title:hover{color:var(--primary)}
+.cat-icon{font-size:10px;transition:transform .2s}
+.category.collapsed .cat-icon{transform:rotate(-90deg)}
+.category-items{padding:0 10px;overflow:hidden;max-height:800px;transition:max-height .3s ease}
+.category.collapsed .category-items{max-height:0}
+/* 子分类 */
+.subcategory{margin-bottom:2px}
+.subcategory-title{padding:5px 10px;font-size:11px;font-weight:600;color:var(--label);cursor:pointer;display:flex;align-items:center;gap:5px;opacity:.8;user-select:none}
+.subcategory-title:hover{color:var(--primary);opacity:1}
+.subcat-icon{font-size:9px;transition:transform .15s}
+.subcategory.collapsed .subcat-icon{transform:rotate(-90deg)}
+.subcategory-items{padding:0 6px;overflow:hidden;max-height:600px;transition:max-height .25s ease}
+.subcategory.collapsed .subcategory-items{max-height:0}
+/* 图表项 */
+.chart-item{padding:8px 10px;margin:1px 0;border-radius:5px;cursor:pointer;font-size:12px;transition:background .15s;display:flex;align-items:center;gap:7px}
+.chart-item:hover{background:var(--hover)}
+.chart-item.active{background:var(--primary);color:#fff;font-weight:600}
+.chart-item.active .chart-number{opacity:.7}
+.chart-number{font-size:10px;opacity:.5;min-width:22px;font-weight:500}
+.chart-freq{font-size:9px;padding:1px 5px;border-radius:99px;flex-shrink:0;font-weight:600;margin-left:auto}
+.freq-high{background:rgba(77,158,255,.18);color:var(--primary)}
+.freq-common{background:rgba(48,217,134,.15);color:#30D986}
+.freq-special{background:rgba(255,179,64,.15);color:#FFB340}
+.freq-adv{background:rgba(155,127,255,.15);color:#9B7FFF}
+/* 主内容 */
+.main-content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top-bar{padding:14px 20px;background:var(--panel-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.breadcrumb{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--label)}
+.breadcrumb-cat{color:var(--text);font-weight:500}
+.breadcrumb-current{color:var(--title);font-weight:700}
+.top-actions{display:flex;gap:10px}
+.btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text);transition:all .2s}
+.btn:hover{background:var(--hover);border-color:var(--primary)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{opacity:.9}
+.chart-viewer{flex:1;position:relative;overflow:hidden}
+.chart-viewer iframe{width:100%;height:100%;border:none}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--label);gap:12px;text-align:center;padding:24px}
+.empty-icon{font-size:56px;opacity:.2}
+.empty-title{font-size:16px;font-weight:600;color:var(--text)}
+.empty-sub{font-size:13px;line-height:1.7;max-width:360px}
+.stats-bar{display:flex;gap:20px;margin-top:12px}
+.stat{text-align:center}
+.stat-num{font-size:24px;font-weight:700;color:var(--primary)}
+.stat-label{font-size:11px;color:var(--label);margin-top:2px}
+/* 滚动条 */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--label)}
 </style>
 </head>
 <body>
-
 <div class="sidebar">
   <div class="sidebar-header">
     <h1>📊 信息可视化图表库</h1>
-    <p>10大类别 · 58种图型 · 点击切换查看</p>
+    <p>10大语义类 · <b style="color:var(--primary)">69种图型</b> · 顶级品质 L5</p>
   </div>
-  
   <div class="search-box">
-    <input type="text" id="search-input" placeholder="🔍 搜索图表类型...">
+    <input type="text" id="search-input" placeholder="🔍 搜索图表名称...">
   </div>
-  
-  <div class="chart-list" id="chart-list">
-    <!-- JavaScript 动态生成 -->
-  </div>
+  <div class="chart-list" id="chart-list"></div>
 </div>
-
 <div class="main-content">
   <div class="top-bar">
     <div class="breadcrumb">
       <span>图表库</span>
       <span>›</span>
-      <span class="breadcrumb-current" id="current-chart">请选择图表</span>
+      <span class="breadcrumb-cat" id="bc-cat">—</span>
+      <span id="bc-sep" style="display:none">›</span>
+      <span class="breadcrumb-current" id="bc-chart">请选择图表</span>
     </div>
     <div class="top-actions">
-      <button class="btn" onclick="toggleTheme()" id="theme-toggle">🌙 亮色模式</button>
-      <button class="btn" onclick="openInNewTab()">↗ 新窗口打开</button>
+      <button class="btn" onclick="toggleTheme()" id="theme-toggle">☀️ 亮色</button>
+      <button class="btn" onclick="openInNewTab()">↗ 新窗口</button>
       <button class="btn btn-primary" onclick="toggleFullscreen()">⛶ 全屏</button>
     </div>
   </div>
-  
   <div class="chart-viewer">
     <div class="empty-state" id="empty-state">
       <div class="empty-icon">📈</div>
-      <div>从左侧列表选择一个图表开始浏览</div>
+      <div class="empty-title">69种信息可视化图表</div>
+      <div class="empty-sub">从左侧分类列表选择图表，支持数据实时编辑、双主题切换、全屏预览</div>
+      <div class="stats-bar">
+        <div class="stat"><div class="stat-num">69</div><div class="stat-label">图表种类</div></div>
+        <div class="stat"><div class="stat-num">10</div><div class="stat-label">语义分类</div></div>
+        <div class="stat"><div class="stat-num">L5</div><div class="stat-label">品质等级</div></div>
+      </div>
     </div>
     <iframe id="chart-iframe" style="display:none"></iframe>
   </div>
 </div>
 
 <script>
-const CHARTS = {
-  '01-comparison': {
-    name: '比较类 Comparison',
+// ==============================
+// 69种图表完整数据（按官方分类）
+// ==============================
+const CHARTS = [
+  {
+    key: '01-comparison',
+    name: '01 比较 Comparison',
     icon: '📊',
-    charts: [
-      {name: '柱状图 Bar Chart', file: '01-bar-chart.html'},
-      {name: '条形图 Horizontal Bar', file: '02-horizontal-bar.html'},
-      {name: '分组柱状图 Grouped Bar', file: '03-grouped-bar.html'},
-      {name: '雷达图 Radar', file: '04-radar.html'},
-      {name: '热力矩阵 Heatmap Matrix', file: '05-heatmap-matrix.html'},
-      {name: '子弹图 Bullet Chart', file: '06-bullet-chart.html'},
-      {name: '哑铃图 Dumbbell', file: '07-dumbbell.html'},
-      {name: '斜率图 Slope Chart', file: '08-slope-chart.html'}
+    items: [
+      {name:'柱状图 Bar Chart', file:'01-comparison/01-bar-chart.html', freq:'high'},
+      {name:'条形图 Horizontal Bar', file:'01-comparison/02-horizontal-bar.html', freq:'high'},
+      {name:'分组柱状图 Grouped Bar', file:'01-comparison/03-grouped-bar.html', freq:'high'},
+      {name:'雷达图 Radar', file:'01-comparison/04-radar.html', freq:'common'},
+      {name:'热力矩阵 Heatmap Matrix', file:'01-comparison/05-heatmap-matrix.html', freq:'common'},
+      {name:'子弹图 Bullet Chart', file:'01-comparison/06-bullet-chart.html', freq:'special'},
+      {name:'哑铃图 Dumbbell', file:'01-comparison/07-dumbbell.html', freq:'special'},
+      {name:'斜率图 Slope Chart', file:'01-comparison/08-slope-chart.html', freq:'special'},
     ]
   },
-  '02-trend': {
-    name: '趋势类 Trend',
+  {
+    key: '02-trend',
+    name: '02 趋势 Trend',
     icon: '📈',
-    charts: [
-      {name: '折线图 Line Chart', file: '01-line-chart.html'},
-      {name: '面积图 Area Chart', file: '02-area-chart.html'},
-      {name: '堆叠面积图 Stacked Area', file: '03-stacked-area.html'},
-      {name: '阶梯图 Step Chart', file: '04-step-chart.html'},
-      {name: '蜡烛图 Candlestick', file: '05-candlestick.html'},
-      {name: '甘特图 Gantt', file: '06-gantt.html'},
-      {name: '流图 Stream Graph', file: '07-stream-graph.html'}
+    items: [
+      {name:'折线图 Line Chart', file:'02-trend/01-line-chart.html', freq:'high'},
+      {name:'面积图 Area Chart', file:'02-trend/02-area-chart.html', freq:'high'},
+      {name:'堆叠面积图 Stacked Area', file:'02-trend/03-stacked-area.html', freq:'common'},
+      {name:'阶梯图 Step Chart', file:'02-trend/04-step-chart.html', freq:'special'},
+      {name:'蜡烛图 Candlestick', file:'02-trend/05-candlestick.html', freq:'special'},
+      {name:'甘特图 Gantt Chart', file:'02-trend/06-gantt.html', freq:'common'},
+      {name:'流图 Stream Graph', file:'02-trend/07-stream-graph.html', freq:'adv'},
     ]
   },
-  '03-composition': {
-    name: '构成类 Composition',
+  {
+    key: '03-composition',
+    name: '03 构成 Composition',
     icon: '🥧',
-    charts: [
-      {name: '饼图 Pie', file: '01-pie.html'},
-      {name: '环图 Donut', file: '02-donut.html'},
-      {name: '堆叠柱状图 Stacked Bar', file: '03-stacked-bar.html'},
-      {name: '旭日图 Sunburst', file: '04-sunburst.html'},
-      {name: '矩形树图 Treemap', file: '05-treemap.html'},
-      {name: '瀑布图 Waterfall', file: '06-waterfall.html'},
-      {name: '百分比堆叠 100% Stacked', file: '07-100pct-stacked.html'}
+    items: [
+      {name:'饼图 Pie Chart', file:'03-composition/01-pie.html', freq:'high'},
+      {name:'环图 Donut Chart', file:'03-composition/02-donut.html', freq:'high'},
+      {name:'堆叠柱状图 Stacked Bar', file:'03-composition/03-stacked-bar.html', freq:'high'},
+      {name:'旭日图 Sunburst', file:'03-composition/04-sunburst.html', freq:'common'},
+      {name:'矩形树图 Treemap', file:'03-composition/05-treemap.html', freq:'common'},
+      {name:'瀑布图 Waterfall', file:'03-composition/06-waterfall.html', freq:'common'},
+      {name:'百分比堆叠柱 100% Stacked', file:'03-composition/07-100pct-stacked.html', freq:'common'},
     ]
   },
-  '04-distribution': {
-    name: '分布类 Distribution',
+  {
+    key: '04-distribution',
+    name: '04 分布 Distribution',
     icon: '📉',
-    charts: [
-      {name: '直方图 Histogram', file: '01-histogram.html'},
-      {name: '散点图 Scatter', file: '02-scatter.html'},
-      {name: '箱线图 Box Plot', file: '03-boxplot.html'},
-      {name: '气泡图 Bubble', file: '04-bubble.html'},
-      {name: '小提琴图 Violin', file: '05-violin.html'},
-      {name: '热力日历 Heatmap Calendar', file: '06-heatmap-calendar.html'},
-      {name: '平行坐标 Parallel Coords', file: '07-parallel-coords.html'}
+    items: [
+      {name:'直方图 Histogram', file:'04-distribution/01-histogram.html', freq:'high'},
+      {name:'散点图 Scatter Plot', file:'04-distribution/02-scatter.html', freq:'high'},
+      {name:'箱线图 Box Plot', file:'04-distribution/03-boxplot.html', freq:'common'},
+      {name:'气泡图 Bubble Chart', file:'04-distribution/04-bubble.html', freq:'common'},
+      {name:'小提琴图 Violin Plot', file:'04-distribution/05-violin.html', freq:'adv'},
+      {name:'热力日历 Heatmap Calendar', file:'04-distribution/06-heatmap-calendar.html', freq:'special'},
+      {name:'平行坐标 Parallel Coords', file:'04-distribution/07-parallel-coords.html', freq:'adv'},
+      {name:'蜂群图 Beeswarm ✦新', file:'04-distribution/08-beeswarm.html', freq:'adv'},
+      {name:'密度图 KDE Density ✦新', file:'04-distribution/09-kde-density.html', freq:'adv'},
     ]
   },
-  '05-relationship': {
-    name: '关系类 Relationship',
+  {
+    key: '05-relationship',
+    name: '05 关系 Relationship',
     icon: '🔗',
-    charts: [
-      {name: '相关矩阵 Correlation Matrix', file: '01-correlation-matrix.html'},
-      {name: '弦图 Chord', file: '02-chord.html'},
-      {name: '散点矩阵 Scatter Matrix', file: '03-scatter-matrix.html'},
-      {name: '邻接矩阵 Adjacency Matrix', file: '04-adjacency-matrix.html'}
+    items: [
+      {name:'相关矩阵 Correlation Matrix', file:'05-relationship/01-correlation-matrix.html', freq:'adv'},
+      {name:'和弦图 Chord Diagram', file:'05-relationship/02-chord.html', freq:'adv'},
+      {name:'散点矩阵 Scatter Matrix', file:'05-relationship/03-scatter-matrix.html', freq:'adv'},
+      {name:'平行坐标网络 Adjacency', file:'05-relationship/04-adjacency-matrix.html', freq:'special'},
+      {name:'连接散点图 Connected Scatter ✦新', file:'05-relationship/05-connected-scatter.html', freq:'adv'},
     ]
   },
-  '06-flow': {
-    name: '流动类 Flow',
+  {
+    key: '06-flow',
+    name: '06 流动 Flow',
     icon: '🌊',
-    charts: [
-      {name: '桑基图 Sankey', file: '01-sankey.html'},
-      {name: '漏斗图 Funnel', file: '02-funnel.html'},
-      {name: '流程图 Flowchart', file: '03-flowchart.html'},
-      {name: '力导向图 Force Graph', file: '04-force-graph.html'},
-      {name: '旅程地图 Journey Map', file: '05-journey-map.html'},
-      {name: '时间轴 Timeline', file: '06-timeline.html'}
+    items: [
+      {name:'桑基图 Sankey', file:'06-flow/01-sankey.html', freq:'high'},
+      {name:'漏斗图 Funnel', file:'06-flow/02-funnel.html', freq:'high'},
+      {name:'流程图 Flowchart', file:'06-flow/03-flowchart.html', freq:'high'},
+      {name:'力导向图 Force Graph', file:'06-flow/04-force-graph.html', freq:'special'},
+      {name:'用户旅程图 Journey Map', file:'06-flow/05-journey-map.html', freq:'adv'},
+      {name:'时间轴 Timeline', file:'06-flow/06-timeline.html', freq:'high'},
+      {name:'冲积图 Alluvial ✦新', file:'06-flow/07-alluvial.html', freq:'adv'},
     ]
   },
-  '07-geo': {
-    name: '地理类 Geographic',
+  {
+    key: '07-geo',
+    name: '07 地理空间 Geo-spatial',
     icon: '🗺️',
-    charts: [
-      {name: '填色地图 Choropleth', file: '01-choropleth.html'},
-      {name: '气泡地图 Bubble Map', file: '02-bubble-map.html'},
-      {name: '地理热力图 Heatmap Geo', file: '03-heatmap-geo.html'},
-      {name: '流向地图 Flow Map', file: '04-flow-map.html'},
-      {name: '点密度图 Dot Density', file: '05-dot-density.html'}
+    items: [
+      {name:'填色地图 Choropleth', file:'07-geo/01-choropleth.html', freq:'high'},
+      {name:'气泡地图 Bubble Map', file:'07-geo/02-bubble-map.html', freq:'common'},
+      {name:'地理热力图 Heatmap Geo', file:'07-geo/03-heatmap-geo.html', freq:'common'},
+      {name:'流向地图 Flow Map', file:'07-geo/04-flow-map.html', freq:'special'},
+      {name:'点密度图 Dot Density', file:'07-geo/05-dot-density.html', freq:'special'},
     ]
   },
-  '08-hierarchy': {
-    name: '层级类 Hierarchy',
+  {
+    key: '08-hierarchy',
+    name: '08 层级结构 Hierarchy',
     icon: '🌳',
-    charts: [
-      {name: '树图 Tree', file: '01-tree.html'},
-      {name: '思维导图 Mind Map', file: '02-mindmap.html'},
-      {name: '组织架构图 Org Chart', file: '03-org-chart.html'},
-      {name: '冰柱图 Icicle', file: '04-icicle.html'},
-      {name: '径向树 Radial Tree', file: '05-radial-tree.html'}
+    items: [
+      {name:'树状图 Tree Diagram', file:'08-hierarchy/01-tree.html', freq:'high'},
+      {name:'思维导图 Mind Map', file:'08-hierarchy/02-mindmap.html', freq:'high'},
+      {name:'组织架构图 Org Chart', file:'08-hierarchy/03-org-chart.html', freq:'high'},
+      {name:'冰柱图 Icicle Chart', file:'08-hierarchy/04-icicle.html', freq:'adv'},
+      {name:'径向树图 Radial Tree', file:'08-hierarchy/05-radial-tree.html', freq:'adv'},
     ]
   },
-  '09-network': {
-    name: '网络类 Network',
+  {
+    key: '09-network',
+    name: '09 网络关系 Network',
     icon: '🕸️',
-    charts: [
-      {name: '弧图 Arc Diagram', file: '01-arc-diagram.html'},
-      {name: '网络邻接矩阵 Adjacency Matrix', file: '02-adjacency-matrix-network.html'},
-      {name: '力导向网络 Force Directed', file: '03-force-directed.html'},
-      {name: '知识图谱 Knowledge Graph', file: '04-knowledge-graph.html'}
+    items: [
+      {name:'力导向网络 Force-Directed', file:'09-network/03-force-directed.html', freq:'high'},
+      {name:'弧线图 Arc Diagram', file:'09-network/01-arc-diagram.html', freq:'special'},
+      {name:'邻接矩阵 Adjacency Matrix', file:'09-network/02-adjacency-matrix-network.html', freq:'special'},
+      {name:'知识图谱 Knowledge Graph', file:'09-network/04-knowledge-graph.html', freq:'adv'},
     ]
   },
-  '10-text-info': {
-    name: '文本信息类 Text/Info',
+  {
+    key: '10-text-info',
+    name: '10 文本信息 Text/Info',
     icon: '📄',
-    charts: [
-      {name: 'KPI卡片 KPI Card', file: '01-kpi-card.html'},
-      {name: '仪表盘 Gauge', file: '02-gauge.html'}
+    subcategories: [
+      {
+        key: '10A',
+        name: '10-A 数据展示 Data Display',
+        items: [
+          {name:'统计卡片 KPI Card', file:'10-text-info/01-kpi-card.html', freq:'high'},
+          {name:'仪表盘 Gauge Chart', file:'10-text-info/02-gauge.html', freq:'common'},
+          {name:'进度条 Progress Bar ✦新', file:'10-text-info/03-progress-bar.html', freq:'high'},
+          {name:'词云 Word Cloud ✦新', file:'10-text-info/04-word-cloud.html', freq:'common'},
+        ]
+      },
+      {
+        key: '10B',
+        name: '10-B 叙事时序 Narrative',
+        items: [
+          {name:'时间轴 Timeline', file:'06-flow/06-timeline.html', freq:'high'},
+          {name:'故事板 Storyboard ✦新', file:'10-text-info/09-storyboard.html', freq:'adv'},
+        ]
+      },
+      {
+        key: '10C',
+        name: '10-C 概念框架 Framework',
+        items: [
+          {name:'SWOT矩阵 ✦新', file:'10-text-info/05-swot.html', freq:'high'},
+          {name:'商业画布 BMC ✦新', file:'10-text-info/06-business-canvas.html', freq:'high'},
+          {name:'金字塔模型 Pyramid ✦新', file:'10-text-info/07-pyramid.html', freq:'high'},
+          {name:'波特五力 Porter\'s 5F ✦新', file:'10-text-info/08-porter-five-forces.html', freq:'common'},
+        ]
+      }
     ]
   }
-};
+];
 
-let currentChart = null;
+const FREQ_LABELS = {high:'高频', common:'常用', special:'专用', adv:'进阶'};
+const FREQ_CLASSES = {high:'freq-high', common:'freq-common', special:'freq-special', adv:'freq-adv'};
+
 let currentTheme = 'dark';
+let currentFile = null;
+let chartIndex = 0;
 
-// 渲染图表列表
-function renderChartList() {
-  const listEl = document.getElementById('chart-list');
+function renderList() {
+  chartIndex = 0;
   let html = '';
-  let chartIndex = 1;
-  
-  Object.entries(CHARTS).forEach(([categoryKey, category]) => {
-    html += `
-      <div class="category" data-category="${categoryKey}">
-        <div class="category-title" onclick="toggleCategory('${categoryKey}')">
-          <span class="category-icon">▼</span>
-          <span>${category.icon} ${category.name}</span>
-        </div>
-        <div class="category-items">
-    `;
-    
-    category.charts.forEach(chart => {
-      html += `
-        <div class="chart-item" onclick="loadChart('${categoryKey}', '${chart.file}', '${chart.name}')" data-search="${chart.name.toLowerCase()}">
-          <span class="chart-number">${chartIndex++}</span>
-          <span>${chart.name}</span>
-        </div>
-      `;
-    });
-    
-    html += `
-        </div>
+  CHARTS.forEach(cat => {
+    html += `<div class="category" data-cat="${cat.key}">
+      <div class="category-title" onclick="toggleCat('${cat.key}')">
+        <span class="cat-icon">▼</span>
+        <span>${cat.icon} ${cat.name}</span>
       </div>
-    `;
-  });
-  
-  listEl.innerHTML = html;
-}
+      <div class="category-items">`;
 
-// 切换分类折叠
-function toggleCategory(categoryKey) {
-  const categoryEl = document.querySelector(`[data-category="${categoryKey}"]`);
-  categoryEl.classList.toggle('collapsed');
-}
-
-// 加载图表
-function loadChart(categoryKey, filename, name) {
-  const iframe = document.getElementById('chart-iframe');
-  const emptyState = document.getElementById('empty-state');
-  
-  // 移除之前的 active 状态
-  document.querySelectorAll('.chart-item').forEach(el => el.classList.remove('active'));
-  
-  // 添加当前 active 状态
-  event.currentTarget.classList.add('active');
-  
-  // 更新面包屑
-  document.getElementById('current-chart').textContent = name;
-  
-  // 加载 iframe
-  iframe.src = `./${categoryKey}/${filename}`;
-  iframe.style.display = 'block';
-  emptyState.style.display = 'none';
-  
-  currentChart = `./${categoryKey}/${filename}`;
-  
-  // 等待iframe加载完成后，通过postMessage同步主题并隐藏按钮
-  iframe.onload = function() {
-    // 发送当前主题给iframe
-    iframe.contentWindow.postMessage({ type: 'setTheme', theme: currentTheme }, '*');
-  };
-}
-
-// 搜索功能
-document.getElementById('search-input').addEventListener('input', (e) => {
-  const keyword = e.target.value.toLowerCase();
-  document.querySelectorAll('.chart-item').forEach(item => {
-    const searchText = item.getAttribute('data-search');
-    if (searchText.includes(keyword)) {
-      item.style.display = 'flex';
+    if (cat.subcategories) {
+      cat.subcategories.forEach(sub => {
+        html += `<div class="subcategory" data-sub="${sub.key}">
+          <div class="subcategory-title" onclick="toggleSub('${sub.key}')">
+            <span class="subcat-icon">▼</span>
+            <span>${sub.name}</span>
+          </div>
+          <div class="subcategory-items">`;
+        sub.items.forEach(item => {
+          chartIndex++;
+          html += `<div class="chart-item" data-file="${item.file}" data-name="${item.name}" data-cat="${cat.name}"
+            data-search="${(item.name).toLowerCase()}"
+            onclick="loadChart('${item.file}', '${item.name}', '${cat.name}')">
+            <span class="chart-number">${String(chartIndex).padStart(2,'0')}</span>
+            <span>${item.name}</span>
+            <span class="chart-freq ${FREQ_CLASSES[item.freq]}">${FREQ_LABELS[item.freq]}</span>
+          </div>`;
+        });
+        html += `</div></div>`;
+      });
     } else {
-      item.style.display = 'none';
+      cat.items.forEach(item => {
+        chartIndex++;
+        html += `<div class="chart-item" data-file="${item.file}" data-name="${item.name}" data-cat="${cat.name}"
+          data-search="${(item.name).toLowerCase()}"
+          onclick="loadChart('${item.file}', '${item.name}', '${cat.name}')">
+          <span class="chart-number">${String(chartIndex).padStart(2,'0')}</span>
+          <span>${item.name}</span>
+          <span class="chart-freq ${FREQ_CLASSES[item.freq]}">${FREQ_LABELS[item.freq]}</span>
+        </div>`;
+      });
     }
+
+    html += `</div></div>`;
   });
+  document.getElementById('chart-list').innerHTML = html;
+}
+
+function toggleCat(key) {
+  document.querySelector(`[data-cat="${key}"]`).classList.toggle('collapsed');
+}
+function toggleSub(key) {
+  document.querySelector(`[data-sub="${key}"]`).classList.toggle('collapsed');
+}
+
+function loadChart(file, name, catName) {
+  const iframe = document.getElementById('chart-iframe');
+  const empty = document.getElementById('empty-state');
+  document.querySelectorAll('.chart-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('bc-cat').textContent = catName;
+  document.getElementById('bc-chart').textContent = name;
+  document.getElementById('bc-sep').style.display = '';
+  iframe.src = './' + file;
+  iframe.style.display = 'block';
+  empty.style.display = 'none';
+  currentFile = './' + file;
+  iframe.onload = () => iframe.contentWindow.postMessage({type:'setTheme', theme:currentTheme}, '*');
+}
+
+// Search
+document.getElementById('search-input').addEventListener('input', e => {
+  const kw = e.target.value.trim().toLowerCase();
+  document.querySelectorAll('.chart-item').forEach(el => {
+    el.style.display = el.dataset.search.includes(kw) ? 'flex' : 'none';
+  });
+  if (kw) {
+    // expand all when searching
+    document.querySelectorAll('.category').forEach(el => el.classList.remove('collapsed'));
+    document.querySelectorAll('.subcategory').forEach(el => el.classList.remove('collapsed'));
+  }
 });
 
-// 新窗口打开
 function openInNewTab() {
-  if (currentChart) {
-    window.open(currentChart, '_blank');
-  } else {
-    alert('请先选择一个图表');
-  }
+  if (currentFile) window.open(currentFile, '_blank');
 }
-
-// 全屏切换
 function toggleFullscreen() {
   const iframe = document.getElementById('chart-iframe');
-  if (iframe.style.display === 'none') {
-    alert('请先选择一个图表');
-    return;
-  }
-  
-  if (!document.fullscreenElement) {
-    iframe.requestFullscreen();
-  } else {
-    document.exitFullscreen();
-  }
+  if (iframe.style.display === 'none') return;
+  if (!document.fullscreenElement) iframe.requestFullscreen();
+  else document.exitFullscreen();
 }
-
-// 主题切换
 function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.className = currentTheme === 'light' ? 'theme-light' : '';
+  document.getElementById('theme-toggle').textContent = currentTheme === 'dark' ? '☀️ 亮色' : '🌑 暗色';
   const iframe = document.getElementById('chart-iframe');
-  
-  if (currentTheme === 'dark') {
-    document.documentElement.classList.add('theme-light');
-    document.getElementById('theme-toggle').textContent = '🌙 暗色模式';
-    currentTheme = 'light';
-  } else {
-    document.documentElement.classList.remove('theme-light');
-    document.getElementById('theme-toggle').textContent = '☀️ 亮色模式';
-    currentTheme = 'dark';
-  }
-  
-  // 通过postMessage通知iframe切换主题
   if (iframe.style.display !== 'none' && iframe.contentWindow) {
-    iframe.contentWindow.postMessage({ type: 'setTheme', theme: currentTheme }, '*');
+    iframe.contentWindow.postMessage({type:'setTheme', theme:currentTheme}, '*');
   }
 }
 
-// 初始化
-renderChartList();
+renderList();
 </script>
-
 </body>
 </html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>密度图 KDE Density Plot</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--split:#141E30;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--split:#EEF2F7;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0}
+.chart-title{font-size:18px;font-weight:700;color:var(--title);padding:4px 0;margin-bottom:4px;outline:none;transition:color .3s}
+.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:16px}
+#chart{flex:1}
+.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:background .3s,border-color .3s}
+.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:4px}
+.editor-body{flex:1;overflow-y:auto;padding:12px 16px}
+.control-row{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.control-label{font-size:12px;color:var(--label);font-weight:500;display:flex;justify-content:space-between;align-items:center}
+.control-val{font-weight:700;color:var(--title);font-size:13px}
+input[type=range]{width:100%;accent-color:var(--input-focus);height:4px;margin-top:2px}
+textarea{width:100%;min-height:100px;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:8px;border-radius:6px;font-size:11px;font-family:monospace;outline:none;resize:vertical;line-height:1.6;transition:all .2s}
+textarea:focus{border-color:var(--input-focus)}
+.section-title{font-size:12px;color:var(--label);font-weight:600;margin:10px 0 6px}
+.group-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.group-row input{flex:1;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:12px;outline:none}
+.group-row input:focus{border-color:var(--input-focus)}
+.add-row{width:100%;margin-top:8px;padding:6px;background:transparent;border:1px dashed var(--border);color:var(--label);border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s}
+.add-row:hover{border-color:var(--input-focus);color:var(--input-focus)}
+.del-btn{background:none;border:none;color:var(--label);cursor:pointer;font-size:14px;padding:0 4px}
+.del-btn:hover{color:#FF6B6B}
+.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .2s}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:all .25s}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+.insight-box{background:rgba(77,158,255,0.08);border:1px solid rgba(77,158,255,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+.insight-box p{font-size:12px;color:var(--text);line-height:1.6}
+.insight-title{font-size:11px;color:#4D9EFF;font-weight:600;margin-bottom:4px}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">产品评分分布密度图</div>
+  <div class="chart-subtitle">不同渠道用户评分的核密度估计（KDE）· 峰值显示最常见评分区间</div>
+  <div id="chart"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>数据编辑</h3><p>KDE核密度估计参数调节</p></div>
+  <div class="editor-body">
+    <div class="insight-box">
+      <div class="insight-title">💡 核心洞察</div>
+      <p>自然流量用户评分呈双峰分布（4.2和4.8）；付费用户评分集中在4.5-5.0高分区间；口碑传播用户满意度最均匀。</p>
+    </div>
+    <div class="control-row">
+      <span class="control-label">带宽（Bandwidth）<span class="control-val" id="bw-val">0.3</span></span>
+      <input type="range" min="0.1" max="1.0" step="0.05" value="0.3" id="bandwidth" oninput="document.getElementById('bw-val').textContent=this.value">
+    </div>
+    <div class="control-row">
+      <span class="control-label">采样点数 <span class="control-val" id="pts-val">100</span></span>
+      <input type="range" min="50" max="300" step="10" value="100" id="num-pts" oninput="document.getElementById('pts-val').textContent=this.value">
+    </div>
+    <div class="section-title">数据组（逗号分隔数值）</div>
+    <div id="group-rows"></div>
+    <button class="add-row" onclick="addGroup()">＋ 添加数据组</button>
+  </div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const THEMES = {
+  dark:{bg:'#080C14',panelBg:'#0E1420',border:'#1A2236',split:'#141E30',titleColor:'#F0F4FF',textColor:'#C8D4E8',labelColor:'#5A6A84',btnSec:'#1A2236',inputBg:'#080C14',inputBorder:'#1A2236',inputFocus:'#4D9EFF',colors:['#4D9EFF','#30D986','#FFB340','#FF6B6B','#9B7FFF']},
+  light:{bg:'#F5F7FA',panelBg:'#FFFFFF',border:'#E1E8F0',split:'#EEF2F7',titleColor:'#0D1525',textColor:'#2D3A4A',labelColor:'#8A9BB0',btnSec:'#F0F4FA',inputBg:'#FFFFFF',inputBorder:'#D9E3EE',inputFocus:'#2B7FFF',colors:['#2B7FFF','#00B96B','#FA8C16','#F5222D','#722ED1']}
+};
+
+const DEFAULT_GROUPS = [
+  {name:'自然流量', values:[3.2,3.5,3.8,3.9,4.0,4.1,4.1,4.2,4.2,4.3,4.4,4.5,4.6,4.7,4.8,4.8,4.9,5.0,5.0,5.0]},
+  {name:'付费推广', values:[4.2,4.3,4.4,4.5,4.5,4.5,4.6,4.6,4.7,4.7,4.8,4.8,4.8,4.9,4.9,5.0,5.0,5.0,5.0,5.0]},
+  {name:'口碑传播', values:[3.5,3.8,4.0,4.1,4.2,4.3,4.4,4.5,4.5,4.6,4.6,4.7,4.7,4.8,4.8,4.9,4.9,5.0,5.0,5.0]}
+];
+let GROUPS = JSON.parse(JSON.stringify(DEFAULT_GROUPS));
+let mode = 'dark';
+const chart = echarts.init(document.getElementById('chart'));
+window.addEventListener('resize', () => chart.resize());
+
+// Gaussian KDE
+function gaussianKDE(data, bandwidth, xMin, xMax, numPoints) {
+  const h = bandwidth;
+  const points = [];
+  for (let i = 0; i < numPoints; i++) {
+    const x = xMin + (xMax - xMin) * i / (numPoints - 1);
+    let sum = 0;
+    data.forEach(xi => {
+      const z = (x - xi) / h;
+      sum += Math.exp(-0.5 * z * z) / (h * Math.sqrt(2 * Math.PI));
+    });
+    points.push([x, sum / data.length]);
+  }
+  return points;
+}
+
+function buildOption(t) {
+  const bw = +document.getElementById('bandwidth').value;
+  const numPts = +document.getElementById('num-pts').value;
+
+  const allVals = GROUPS.flatMap(g => g.values);
+  const xMin = Math.min(...allVals) - bw * 2;
+  const xMax = Math.max(...allVals) + bw * 2;
+
+  const series = GROUPS.map((g, i) => {
+    const color = t.colors[i % t.colors.length];
+    const pts = gaussianKDE(g.values, bw, xMin, xMax, numPts);
+    return {
+      name: g.name,
+      type: 'line',
+      data: pts,
+      smooth: true,
+      symbol: 'none',
+      lineStyle: { color, width: 2.5 },
+      areaStyle: { color, opacity: 0.12 },
+      emphasis: { lineStyle: { width: 3 } }
+    };
+  });
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: t.panelBg,
+      borderColor: t.border,
+      textStyle: { color: t.textColor },
+      formatter: params => {
+        const x = params[0].data[0].toFixed(2);
+        let html = `评分 ${x}<br/>`;
+        params.forEach(p => {
+          html += `<span style="color:${p.color}">●</span> ${p.seriesName}: ${(p.data[1] * 100).toFixed(2)}%<br/>`;
+        });
+        return html;
+      }
+    },
+    legend: { top: 8, right: 20, textStyle: { color: t.labelColor }, itemWidth: 12 },
+    grid: { left: 60, right: 20, top: 50, bottom: 50 },
+    xAxis: {
+      type: 'value',
+      name: '评分',
+      nameTextStyle: { color: t.labelColor },
+      axisLine: { lineStyle: { color: t.border } },
+      axisLabel: { color: t.labelColor },
+      splitLine: { lineStyle: { color: t.split, type: 'dashed' } },
+      min: v => Math.floor(v.min * 10) / 10,
+      max: v => Math.ceil(v.max * 10) / 10
+    },
+    yAxis: {
+      type: 'value',
+      name: '密度',
+      nameTextStyle: { color: t.labelColor },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: t.split, type: 'dashed' } },
+      axisLabel: { color: t.labelColor, formatter: v => (v * 100).toFixed(0) + '%' }
+    },
+    series
+  };
+}
+
+function renderGroups() {
+  const t = THEMES[mode];
+  document.getElementById('group-rows').innerHTML = GROUPS.map((g, i) => `
+    <div style="margin-bottom:10px;background:${t.inputBg};border:1px solid ${t.inputBorder};border-radius:6px;padding:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <input value="${g.name}" oninput="GROUPS[${i}].name=this.value" style="background:transparent;border:none;color:${t.textColor};font-size:12px;font-weight:600;outline:none;flex:1">
+        <button class="del-btn" onclick="removeGroup(${i})">×</button>
+      </div>
+      <textarea oninput="GROUPS[${i}].values=this.value.split(',').map(v=>parseFloat(v.trim())).filter(v=>!isNaN(v))" style="height:60px;background:transparent;border:none;color:${t.labelColor};resize:none;width:100%;font-size:11px;outline:none">${g.values.join(', ')}</textarea>
+    </div>`).join('');
+}
+function removeGroup(i) { GROUPS.splice(i, 1); renderGroups(); }
+function addGroup() { GROUPS.push({ name: '新组', values: [4.0, 4.2, 4.5, 4.8] }); renderGroups(); }
+function applyData() { chart.setOption(buildOption(THEMES[mode]), true); showToast('✓ 已更新'); }
+function resetData() { GROUPS = JSON.parse(JSON.stringify(DEFAULT_GROUPS)); document.getElementById('bandwidth').value = 0.3; document.getElementById('bw-val').textContent = '0.3'; document.getElementById('num-pts').value = 100; document.getElementById('pts-val').textContent = '100'; renderGroups(); applyData(); showToast('↺ 已重置'); }
+function showToast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.style.opacity = '1'; setTimeout(() => el.style.opacity = '0', 1800); }
+function applyTheme(m) {
+  const t = THEMES[m];
+  document.documentElement.className = m === 'light' ? 'theme-light' : '';
+  document.querySelector('.editor').style.background = t.panelBg;
+  document.querySelector('.editor').style.borderColor = t.border;
+  const btn = document.getElementById('theme-btn');
+  if (btn) { btn.style.background = t.btnSec; btn.style.color = t.textColor; btn.style.borderColor = t.border; }
+  renderGroups(); chart.setOption(buildOption(t), true);
+}
+function toggleTheme() { mode = mode === 'dark' ? 'light' : 'dark'; applyTheme(mode); const btn = document.getElementById('theme-btn'); if (btn) btn.textContent = mode === 'dark' ? '☀️ 亮色' : '🌑 暗色'; }
+window.addEventListener('message', function(e) { if (e.data && e.data.type === 'setTheme') { mode = e.data.theme; applyTheme(mode); var btn = document.getElementById('theme-btn'); if (btn) btn.style.display = 'none'; } });
+renderGroups();
+chart.setOption(buildOption(THEMES[mode]));
+</script>
+</body>
+</html>

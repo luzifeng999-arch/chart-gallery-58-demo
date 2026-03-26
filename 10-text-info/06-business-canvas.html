@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>商业画布 Business Model Canvas</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s;overflow:hidden}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF;--card-bg:#0D1828}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#F5F7FA;--input-border:#D9E3EE;--input-focus:#2B7FFF;--card-bg:#FFFFFF}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:20px;min-width:0;overflow:hidden}
+.chart-title{font-size:17px;font-weight:700;color:var(--title);margin-bottom:3px;outline:none}
+.chart-subtitle{font-size:12px;color:var(--label);margin-bottom:12px}
+.bmc-grid{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:6px;min-height:0}
+/* Grid layout: BMC 9 blocks arranged in standard layout */
+.bmc-cell{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;overflow:hidden;transition:border-color .2s}
+.bmc-cell:hover{border-color:var(--input-focus)}
+/* Standard BMC layout positioning */
+.cell-kp{grid-column:1;grid-row:1/3}
+.cell-ka{grid-column:2;grid-row:1}
+.cell-vp{grid-column:3;grid-row:1/3}
+.cell-cr{grid-column:4;grid-row:1}
+.cell-cs{grid-column:5;grid-row:1/3}
+.cell-kr{grid-column:2;grid-row:2}
+.cell-ch{grid-column:4;grid-row:2}
+.cell-cost{grid-column:1/4;grid-row:3}
+.cell-rev{grid-column:4/6;grid-row:3}
+.cell-header{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 6px;border-radius:4px;width:fit-content}
+.cell-title{font-size:12px;font-weight:600;color:var(--title)}
+.cell-items{flex:1;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
+.cell-item{font-size:11px;color:var(--text);line-height:1.5;padding:2px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:5px}
+.cell-item::before{content:'•';color:var(--label);flex-shrink:0;margin-top:1px}
+/* Colors per block */
+.cell-kp .cell-header{background:rgba(77,158,255,0.15);color:#4D9EFF}
+.cell-ka .cell-header{background:rgba(155,127,255,0.15);color:#9B7FFF}
+.cell-vp .cell-header{background:rgba(255,179,64,0.15);color:#FFB340}
+.cell-cr .cell-header{background:rgba(48,217,134,0.15);color:#30D986}
+.cell-cs .cell-header{background:rgba(255,107,107,0.15);color:#FF6B6B}
+.cell-kr .cell-header{background:rgba(0,212,212,0.15);color:#00D4D4}
+.cell-ch .cell-header{background:rgba(126,245,160,0.15);color:#7EF5A0}
+.cell-cost .cell-header{background:rgba(255,107,107,0.12);color:#FF6B6B}
+.cell-rev .cell-header{background:rgba(48,217,134,0.12);color:#30D986}
+/* Editor */
+.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.editor-header{padding:14px 16px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:3px}
+.editor-body{flex:1;overflow-y:auto;padding:10px 14px}
+.block-edit{margin-bottom:14px}
+.block-label{font-size:11px;font-weight:700;color:var(--label);letter-spacing:.3px;margin-bottom:5px}
+.item-row{display:flex;gap:4px;margin-bottom:3px;align-items:center}
+.item-row input{flex:1;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:4px 7px;border-radius:4px;font-size:11px;outline:none}
+.item-row input:focus{border-color:var(--input-focus)}
+.del-btn{background:none;border:none;color:var(--label);cursor:pointer;font-size:13px;padding:0 2px;flex-shrink:0}
+.del-btn:hover{color:#FF6B6B}
+.add-item{width:100%;padding:4px;background:transparent;border:1px dashed var(--border);color:var(--label);border-radius:4px;cursor:pointer;font-size:11px;margin-top:2px}
+.add-item:hover{border-color:var(--input-focus);color:var(--input-focus)}
+.editor-footer{padding:10px 14px;display:flex;gap:8px;border-top:1px solid var(--border);flex-shrink:0}
+.btn{flex:1;padding:6px 0;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border)}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">SaaS产品商业模式画布</div>
+  <div class="chart-subtitle">Business Model Canvas · 九要素完整商业模式拆解</div>
+  <div class="bmc-grid" id="bmc-grid"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>画布编辑</h3><p>编辑九大模块内容</p></div>
+  <div class="editor-body" id="editor-body"></div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const BLOCKS = [
+  {key:'kp',cls:'cell-kp',label:'KP',title:'关键合作 Key Partners'},
+  {key:'ka',cls:'cell-ka',label:'KA',title:'关键活动 Key Activities'},
+  {key:'vp',cls:'cell-vp',label:'VP',title:'价值主张 Value Propositions'},
+  {key:'cr',cls:'cell-cr',label:'CR',title:'客户关系 Customer Relationships'},
+  {key:'cs',cls:'cell-cs',label:'CS',title:'客户细分 Customer Segments'},
+  {key:'kr',cls:'cell-kr',label:'KR',title:'核心资源 Key Resources'},
+  {key:'ch',cls:'cell-ch',label:'CH',title:'渠道通路 Channels'},
+  {key:'cost',cls:'cell-cost',label:'C$',title:'成本结构 Cost Structure'},
+  {key:'rev',cls:'cell-rev',label:'R$',title:'收入来源 Revenue Streams'}
+];
+const DEFAULT_DATA = {
+  kp:['云计算基础设施（AWS/阿里云）','支付通道合作商（微信/支付宝）','行业内容数据供应商','系统集成服务商'],
+  ka:['产品研发与功能迭代','销售与客户成功','数据安全与合规运营','品牌内容营销'],
+  vp:['一站式数据分析平台','零代码部署，5分钟上手','专属行业解决方案模板','99.9% SLA可用性保障','比竞品节省60%分析时间'],
+  cr:['专属客户成功经理','在线自助文档中心','用户社区与论坛','季度QBR回顾会议'],
+  cs:['中大型科技企业（主力）','快速扩张的初创公司','数字化转型的传统企业','500-5000人规模团队'],
+  kr:['独家算法知识产权','百人工程师团队','2000万行业训练数据','A轮3000万美元融资'],
+  ch:['官网SEO自然流量','销售团队直销','合作伙伴渠道分销','行业展会与峰会'],
+  cost:['研发人员薪酬（55%）','云计算服务器成本（20%）','销售营销费用（15%）','运营行政管理（10%）'],
+  rev:['订阅制SaaS年费（70%）','专业服务实施费（20%）','平台使用量超额费（10%）']
+};
+let DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let mode = 'dark';
+
+function renderGrid() {
+  document.getElementById('bmc-grid').innerHTML = BLOCKS.map(b => `
+    <div class="bmc-cell ${b.cls}">
+      <span class="cell-header">${b.label}</span>
+      <div class="cell-title">${b.title}</div>
+      <div class="cell-items">${DATA[b.key].map(item =>
+        `<div class="cell-item">${item}</div>`
+      ).join('')}</div>
+    </div>`).join('');
+}
+
+function renderEditor() {
+  document.getElementById('editor-body').innerHTML = BLOCKS.map(b => `
+    <div class="block-edit">
+      <div class="block-label">${b.title}</div>
+      ${DATA[b.key].map((item, i) => `
+        <div class="item-row">
+          <input value="${item.replace(/"/g,'&quot;')}" oninput="DATA['${b.key}'][${i}]=this.value">
+          <button class="del-btn" onclick="delItem('${b.key}',${i})">×</button>
+        </div>`).join('')}
+      <button class="add-item" onclick="addItem('${b.key}')">＋ 添加</button>
+    </div>`).join('');
+}
+
+function delItem(k,i){DATA[k].splice(i,1);renderEditor();renderGrid();}
+function addItem(k){DATA[k].push('新内容');renderEditor();renderGrid();}
+function applyData(){renderGrid();showToast('✓ 已更新');}
+function resetData(){DATA=JSON.parse(JSON.stringify(DEFAULT_DATA));renderEditor();renderGrid();showToast('↺ 已重置');}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity='1';setTimeout(()=>el.style.opacity='0',1800);}
+function applyTheme(m){
+  document.documentElement.className=m==='light'?'theme-light':'';
+  document.querySelector('.editor').style.background=m==='light'?'#FFFFFF':'#0E1420';
+  document.querySelector('.editor').style.borderColor=m==='light'?'#E1E8F0':'#1A2236';
+  const btn=document.getElementById('theme-btn');
+  if(btn){btn.style.background=m==='light'?'#F0F4FA':'#1A2236';btn.style.color=m==='light'?'#2D3A4A':'#C8D4E8';btn.style.borderColor=m==='light'?'#E1E8F0':'#1A2236';}
+  renderEditor();renderGrid();
+}
+function toggleTheme(){mode=mode==='dark'?'light':'dark';applyTheme(mode);const btn=document.getElementById('theme-btn');if(btn)btn.textContent=mode==='dark'?'☀️ 亮色':'🌑 暗色';}
+window.addEventListener('message',function(e){if(e.data&&e.data.type==='setTheme'){mode=e.data.theme;applyTheme(mode);var btn=document.getElementById('theme-btn');if(btn)btn.style.display='none';}});
+renderGrid();renderEditor();
+</script>
+</body>
+</html>

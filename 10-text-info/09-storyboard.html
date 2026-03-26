@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>故事板 Storyboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF;--card:#0D1828;--frame-border:#243048}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#F5F7FA;--input-border:#D9E3EE;--input-focus:#2B7FFF;--card:#FFFFFF;--frame-border:#D9E3EE}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0;overflow-y:auto}
+.chart-title{font-size:18px;font-weight:700;color:var(--title);margin-bottom:4px;outline:none}
+.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:20px}
+.storyboard-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.frame{background:var(--card);border:1.5px solid var(--frame-border);border-radius:12px;overflow:hidden;transition:transform .2s,border-color .2s}
+.frame:hover{transform:translateY(-3px);border-color:var(--input-focus)}
+.frame-visual{width:100%;aspect-ratio:16/9;background:var(--border);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.frame-visual img{width:100%;height:100%;object-fit:cover}
+.frame-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;height:100%;color:var(--label)}
+.frame-placeholder .frame-icon{font-size:32px}
+.frame-placeholder .frame-img-label{font-size:11px}
+.frame-number{position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.frame-meta{padding:12px 14px 14px}
+.frame-scene{font-size:12px;font-weight:700;color:var(--label);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.frame-desc{font-size:13px;color:var(--text);line-height:1.6}
+.frame-note{font-size:11px;color:var(--label);margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-style:italic}
+.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}
+.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:4px}
+.editor-body{flex:1;overflow-y:auto;padding:12px 16px}
+.frame-edit{background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.frame-edit-hdr{font-size:11px;font-weight:700;color:var(--label);letter-spacing:.3px;margin-bottom:8px}
+.edit-row{display:flex;flex-direction:column;gap:3px;margin-bottom:7px}
+.edit-label{font-size:11px;color:var(--label)}
+.edit-input{width:100%;background:var(--panel-bg);border:1px solid var(--input-border);color:var(--text);padding:5px 7px;border-radius:4px;font-size:12px;outline:none}
+.edit-input:focus{border-color:var(--input-focus)}
+.edit-textarea{width:100%;background:var(--panel-bg);border:1px solid var(--input-border);color:var(--text);padding:5px 7px;border-radius:4px;font-size:11px;outline:none;resize:none;height:56px;font-family:inherit;line-height:1.5}
+.edit-textarea:focus{border-color:var(--input-focus)}
+.add-row{width:100%;margin-top:4px;padding:6px;background:transparent;border:1px dashed var(--border);color:var(--label);border-radius:6px;cursor:pointer;font-size:12px}
+.add-row:hover{border-color:var(--input-focus);color:var(--input-focus)}
+.del-frame-btn{float:right;background:none;border:none;color:var(--label);cursor:pointer;font-size:13px;padding:0}
+.del-frame-btn:hover{color:#FF6B6B}
+.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border)}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">AI助手产品用户旅程故事板</div>
+  <div class="chart-subtitle">Product Storyboard · 用户发现、体验、留存全流程六帧分镜叙事</div>
+  <div class="storyboard-grid" id="storyboard-grid"></div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>分镜编辑</h3><p>每帧包含场景、描述和导演注释</p></div>
+  <div class="editor-body" id="editor-body">
+    <div id="frame-editor-list"></div>
+    <button class="add-row" onclick="addFrame()" id="add-frame-btn">＋ 添加分镜帧</button>
+  </div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const ICONS = ['🔍','💡','🎯','⚡','🏆','❤️','🚀','📱','💬','🎉'];
+const DEFAULT_FRAMES = [
+  {icon:'🔍', scene:'场景 01 · 发现痛点', desc:'用户小李正在为大量重复的数据报表工作烦恼，每天花费3小时手工整理表格，效率极低。', note:'展现痛点：疲惫的面部表情、杂乱的桌面、堆积的数据文件'},
+  {icon:'💡', scene:'场景 02 · 发现产品', desc:'同事推荐了这款AI数据助手，一张截图展示了"5分钟完成3小时报表工作"的核心价值主张。', note:'转折点：手机屏幕特写、好奇的眼神、明亮的光线暗示新希望'},
+  {icon:'📱', scene:'场景 03 · 首次体验', desc:'小李下载APP，看到简洁的新手引导，30秒内完成账号创建并看到产品主界面。', note:'强调简单：手指轻点动作、进度条、"只需3步"的成功引导'},
+  {icon:'⚡', scene:'场景 04 · 核心时刻', desc:'上传Excel后，AI在20秒内生成完整分析报告，附带可交互图表和智能洞察摘要。', note:'Aha Moment：眼睛发光、对比时钟（20秒 vs 3小时）、报告特写'},
+  {icon:'🏆', scene:'场景 05 · 价值实现', desc:'小李用这份报告获得了季度最佳员工，团队效率提升40%，被老板在全公司表扬。', note:'成就感：奖杯/掌声、上升箭头数据、自信的表情和姿态'},
+  {icon:'❤️', scene:'场景 06 · 口碑传播', desc:'小李主动向5位同事推荐，在公司内部群分享使用心得，成为品牌自然增长的传播者。', note:'社交裂变：群聊截图、推荐对话、用户和朋友一起使用的场景'}
+];
+let FRAMES = JSON.parse(JSON.stringify(DEFAULT_FRAMES));
+let mode = 'dark';
+
+function renderGrid() {
+  document.getElementById('storyboard-grid').innerHTML = FRAMES.map((f, i) => `
+    <div class="frame">
+      <div class="frame-visual">
+        <div class="frame-placeholder">
+          <div class="frame-icon">${f.icon}</div>
+          <div class="frame-img-label">分镜 ${i+1}</div>
+        </div>
+        <div class="frame-number">${i+1}</div>
+      </div>
+      <div class="frame-meta">
+        <div class="frame-scene">${f.scene}</div>
+        <div class="frame-desc">${f.desc}</div>
+        ${f.note ? `<div class="frame-note">🎬 ${f.note}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function renderEditor() {
+  const t = { inputBg: mode === 'dark' ? '#080C14' : '#F5F7FA', border: mode === 'dark' ? '#1A2236' : '#D9E3EE', text: mode === 'dark' ? '#C8D4E8' : '#2D3A4A', panelBg: mode === 'dark' ? '#0E1420' : '#FFFFFF' };
+  document.getElementById('frame-editor-list').innerHTML = FRAMES.map((f, i) => `
+    <div class="frame-edit" style="background:${t.inputBg};border-color:${t.border}">
+      <div class="frame-edit-hdr">
+        帧 ${i+1}
+        <button class="del-frame-btn" onclick="delFrame(${i})" ${FRAMES.length<=2?'disabled':''}>× 删除</button>
+      </div>
+      <div class="edit-row">
+        <span class="edit-label">图标 Emoji</span>
+        <input class="edit-input" value="${f.icon}" oninput="FRAMES[${i}].icon=this.value" style="background:${t.panelBg};border-color:${t.border};color:${t.text}">
+      </div>
+      <div class="edit-row">
+        <span class="edit-label">场景标题</span>
+        <input class="edit-input" value="${f.scene.replace(/"/g,'&quot;')}" oninput="FRAMES[${i}].scene=this.value" style="background:${t.panelBg};border-color:${t.border};color:${t.text}">
+      </div>
+      <div class="edit-row">
+        <span class="edit-label">场景描述</span>
+        <textarea class="edit-textarea" oninput="FRAMES[${i}].desc=this.value" style="background:${t.panelBg};border-color:${t.border};color:${t.text}">${f.desc}</textarea>
+      </div>
+      <div class="edit-row">
+        <span class="edit-label">导演注释（可选）</span>
+        <textarea class="edit-textarea" oninput="FRAMES[${i}].note=this.value" style="background:${t.panelBg};border-color:${t.border};color:${t.text}">${f.note||''}</textarea>
+      </div>
+    </div>`).join('');
+  document.getElementById('add-frame-btn').style.display = FRAMES.length >= 9 ? 'none' : '';
+}
+
+function delFrame(i) { if (FRAMES.length > 2) { FRAMES.splice(i, 1); renderEditor(); renderGrid(); } }
+function addFrame() { if (FRAMES.length < 9) { FRAMES.push({icon:'🎬', scene:`场景 0${FRAMES.length+1} · 新场景`, desc:'描述这个场景中用户的行为和感受...', note:''}); renderEditor(); renderGrid(); } }
+function applyData() { renderGrid(); showToast('✓ 已更新'); }
+function resetData() { FRAMES = JSON.parse(JSON.stringify(DEFAULT_FRAMES)); renderEditor(); renderGrid(); showToast('↺ 已重置'); }
+function showToast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.style.opacity = '1'; setTimeout(() => el.style.opacity = '0', 1800); }
+function applyTheme(m) {
+  document.documentElement.className = m === 'light' ? 'theme-light' : '';
+  document.querySelector('.editor').style.background = m === 'light' ? '#FFFFFF' : '#0E1420';
+  document.querySelector('.editor').style.borderColor = m === 'light' ? '#E1E8F0' : '#1A2236';
+  const btn = document.getElementById('theme-btn');
+  if (btn) { btn.style.background = m === 'light' ? '#F0F4FA' : '#1A2236'; btn.style.color = m === 'light' ? '#2D3A4A' : '#C8D4E8'; btn.style.borderColor = m === 'light' ? '#E1E8F0' : '#1A2236'; }
+  renderEditor(); renderGrid();
+}
+function toggleTheme() { mode = mode === 'dark' ? 'light' : 'dark'; applyTheme(mode); const btn = document.getElementById('theme-btn'); if (btn) btn.textContent = mode === 'dark' ? '☀️ 亮色' : '🌑 暗色'; }
+window.addEventListener('message', function(e) { if (e.data && e.data.type === 'setTheme') { mode = e.data.theme; applyTheme(mode); var btn = document.getElementById('theme-btn'); if (btn) btn.style.display = 'none'; } });
+renderGrid(); renderEditor();
+</script>
+</body>
+</html>

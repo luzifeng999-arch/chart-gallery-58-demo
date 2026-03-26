@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>SWOT矩阵 SWOT Matrix</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;height:100vh;transition:background .3s,color .3s}
+:root{--bg:#080C14;--panel-bg:#0E1420;--border:#1A2236;--title:#F0F4FF;--text:#C8D4E8;--label:#5A6A84;--btn-pri:#238636;--btn-sec:#1A2236;--input-bg:#080C14;--input-border:#1A2236;--input-focus:#4D9EFF;--s-color:#30D986;--w-color:#FF6B6B;--o-color:#4D9EFF;--t-color:#FFB340}
+.theme-light{--bg:#F5F7FA;--panel-bg:#FFFFFF;--border:#E1E8F0;--title:#0D1525;--text:#2D3A4A;--label:#8A9BB0;--btn-pri:#1677FF;--btn-sec:#F0F4FA;--input-bg:#FFFFFF;--input-border:#D9E3EE;--input-focus:#2B7FFF;--s-color:#00B96B;--w-color:#F5222D;--o-color:#2B7FFF;--t-color:#FA8C16}
+.chart-area{flex:1;display:flex;flex-direction:column;padding:24px;min-width:0;overflow-y:auto}
+.chart-title{font-size:18px;font-weight:700;color:var(--title);margin-bottom:4px;outline:none}
+.chart-subtitle{font-size:13px;color:var(--label);margin-bottom:20px}
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;flex:1}
+.swot-quad{border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;border:1px solid;min-height:0}
+.swot-quad.s{background:rgba(48,217,134,0.08);border-color:rgba(48,217,134,0.25)}
+.swot-quad.w{background:rgba(255,107,107,0.08);border-color:rgba(255,107,107,0.25)}
+.swot-quad.o{background:rgba(77,158,255,0.08);border-color:rgba(77,158,255,0.25)}
+.swot-quad.t{background:rgba(255,179,64,0.08);border-color:rgba(255,179,64,0.25)}
+.theme-light .swot-quad.s{background:rgba(0,185,107,0.07);border-color:rgba(0,185,107,0.3)}
+.theme-light .swot-quad.w{background:rgba(245,34,45,0.07);border-color:rgba(245,34,45,0.3)}
+.theme-light .swot-quad.o{background:rgba(43,127,255,0.07);border-color:rgba(43,127,255,0.3)}
+.theme-light .swot-quad.t{background:rgba(250,140,22,0.07);border-color:rgba(250,140,22,0.3)}
+.quad-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.quad-badge{font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:99px}
+.s .quad-badge{background:rgba(48,217,134,0.2);color:var(--s-color)}
+.w .quad-badge{background:rgba(255,107,107,0.2);color:var(--w-color)}
+.o .quad-badge{background:rgba(77,158,255,0.2);color:var(--o-color)}
+.t .quad-badge{background:rgba(255,179,64,0.2);color:var(--t-color)}
+.quad-title{font-size:15px;font-weight:700;color:var(--title)}
+.s .quad-title{color:var(--s-color)}
+.w .quad-title{color:var(--w-color)}
+.o .quad-title{color:var(--o-color)}
+.t .quad-title{color:var(--t-color)}
+.item-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto}
+.item-row{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text);line-height:1.5}
+.item-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.s .item-dot{background:var(--s-color)}
+.w .item-dot{background:var(--w-color)}
+.o .item-dot{background:var(--o-color)}
+.t .item-dot{background:var(--t-color)}
+.axis-label-h{display:flex;justify-content:space-between;font-size:11px;color:var(--label);font-weight:500;margin-bottom:8px;padding:0 2px}
+.axis-label-v{position:absolute;left:-28px;top:50%;transform:translateY(-50%) rotate(-90deg);font-size:11px;color:var(--label);white-space:nowrap;font-weight:500}
+.chart-wrapper{position:relative;flex:1;padding-left:32px}
+.editor{width:280px;background:var(--panel-bg);border-left:1px solid var(--border);display:flex;flex-direction:column}
+.editor-header{padding:16px 16px 8px;border-bottom:1px solid var(--border)}
+.editor-header h3{font-size:14px;font-weight:600;color:var(--title)}
+.editor-header p{font-size:12px;color:var(--label);margin-top:4px}
+.editor-body{flex:1;overflow-y:auto;padding:12px 16px}
+.quad-edit{margin-bottom:16px}
+.quad-edit-title{font-size:12px;font-weight:700;margin-bottom:6px;padding:3px 8px;border-radius:4px;display:inline-block}
+.quad-edit-title.s{color:var(--s-color);background:rgba(48,217,134,0.1)}
+.quad-edit-title.w{color:var(--w-color);background:rgba(255,107,107,0.1)}
+.quad-edit-title.o{color:var(--o-color);background:rgba(77,158,255,0.1)}
+.quad-edit-title.t{color:var(--t-color);background:rgba(255,179,64,0.1)}
+.item-input-row{display:flex;gap:4px;margin-bottom:4px}
+.item-input-row input{flex:1;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:5px 8px;border-radius:4px;font-size:12px;outline:none}
+.item-input-row input:focus{border-color:var(--input-focus)}
+.del-btn{background:none;border:none;color:var(--label);cursor:pointer;font-size:14px;padding:0 3px;flex-shrink:0}
+.del-btn:hover{color:#FF6B6B}
+.add-item{width:100%;padding:5px;background:transparent;border:1px dashed var(--border);color:var(--label);border-radius:4px;cursor:pointer;font-size:11px;margin-top:2px}
+.add-item:hover{border-color:var(--input-focus);color:var(--input-focus)}
+.editor-footer{padding:12px 16px;display:flex;gap:8px;border-top:1px solid var(--border)}
+.btn{flex:1;padding:7px 0;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .2s}
+.btn-apply{background:var(--btn-pri);color:#fff;border-color:var(--btn-pri)}
+.btn-reset{background:var(--btn-sec);color:var(--text)}
+#theme-btn{position:fixed;top:14px;right:14px;z-index:999;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--btn-sec);color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+</style>
+</head>
+<body>
+<button id="theme-btn" onclick="toggleTheme()">☀️ 亮色</button>
+<div class="chart-area">
+  <div class="chart-title" contenteditable="true" spellcheck="false">新能源汽车品牌战略SWOT分析</div>
+  <div class="chart-subtitle">基于市场环境和竞争格局的全面战略分析 · 2024年Q4</div>
+  <div class="chart-wrapper">
+    <div class="axis-label-v">内部因素 ←→ 外部因素</div>
+    <div class="axis-label-h">
+      <span>✓ 有利因素</span>
+      <span>✗ 不利因素</span>
+    </div>
+    <div class="swot-grid" id="swot-grid"></div>
+  </div>
+</div>
+<div class="editor">
+  <div class="editor-header"><h3>内容编辑</h3><p>点击每个象限的条目进行编辑</p></div>
+  <div class="editor-body" id="editor-content"></div>
+  <div class="editor-footer">
+    <button class="btn btn-reset" onclick="resetData()">↺ 重置</button>
+    <button class="btn btn-apply" onclick="applyData()">✓ 应用</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const QUADS = [
+  {key:'s',label:'STRENGTHS',title:'优势',cls:'s'},
+  {key:'w',label:'WEAKNESSES',title:'劣势',cls:'w'},
+  {key:'o',label:'OPPORTUNITIES',title:'机遇',cls:'o'},
+  {key:'t',label:'THREATS',title:'威胁',cls:'t'}
+];
+const DEFAULT_DATA = {
+  s:['核心技术专利护城河','品牌溢价能力强','供应链完全自主可控','智能化软件迭代速度快','用户口碑NPS行业第一'],
+  w:['产能爬坡仍有瓶颈','海外市场准入壁垒高','高端售后服务网络待扩展','电池衰减问题未彻底解决'],
+  o:['政策补贴持续3年','充换电基础设施快速完善','出海东南亚市场空白期','固态电池量产临界点'],
+  t:['传统车企全面转型新能源','价格战导致行业利润压缩','原材料锂镍价格波动大','欧美贸易壁垒加码风险']
+};
+let DATA = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let mode = 'dark';
+
+function renderGrid() {
+  document.getElementById('swot-grid').innerHTML = QUADS.map(q => `
+    <div class="swot-quad ${q.cls}">
+      <div class="quad-header">
+        <span class="quad-badge">${q.label}</span>
+        <span class="quad-title">${q.title}</span>
+      </div>
+      <div class="item-list">${DATA[q.key].map(item => `
+        <div class="item-row">
+          <div class="item-dot"></div>
+          <span>${item}</span>
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function renderEditor() {
+  document.getElementById('editor-content').innerHTML = QUADS.map(q => `
+    <div class="quad-edit">
+      <div class="quad-edit-title ${q.cls}">${q.title}（${q.label}）</div>
+      ${DATA[q.key].map((item, i) => `
+        <div class="item-input-row">
+          <input value="${item}" oninput="DATA['${q.key}'][${i}]=this.value">
+          <button class="del-btn" onclick="removeItem('${q.key}',${i})">×</button>
+        </div>`).join('')}
+      <button class="add-item" onclick="addItem('${q.key}')">＋ 添加条目</button>
+    </div>`).join('');
+}
+
+function removeItem(key, i) { DATA[key].splice(i, 1); renderEditor(); renderGrid(); }
+function addItem(key) { DATA[key].push('新条目'); renderEditor(); renderGrid(); }
+function applyData() { renderGrid(); showToast('✓ 已更新'); }
+function resetData() { DATA = JSON.parse(JSON.stringify(DEFAULT_DATA)); renderEditor(); renderGrid(); showToast('↺ 已重置'); }
+function showToast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.style.opacity = '1'; setTimeout(() => el.style.opacity = '0', 1800); }
+function applyTheme(m) {
+  document.documentElement.className = m === 'light' ? 'theme-light' : '';
+  document.querySelector('.editor').style.background = m === 'light' ? '#FFFFFF' : '#0E1420';
+  document.querySelector('.editor').style.borderColor = m === 'light' ? '#E1E8F0' : '#1A2236';
+  const btn = document.getElementById('theme-btn');
+  if (btn) { btn.style.background = m === 'light' ? '#F0F4FA' : '#1A2236'; btn.style.color = m === 'light' ? '#2D3A4A' : '#C8D4E8'; btn.style.borderColor = m === 'light' ? '#E1E8F0' : '#1A2236'; }
+  renderEditor(); renderGrid();
+}
+function toggleTheme() { mode = mode === 'dark' ? 'light' : 'dark'; applyTheme(mode); const btn = document.getElementById('theme-btn'); if (btn) btn.textContent = mode === 'dark' ? '☀️ 亮色' : '🌑 暗色'; }
+window.addEventListener('message', function(e) { if (e.data && e.data.type === 'setTheme') { mode = e.data.theme; applyTheme(mode); var btn = document.getElementById('theme-btn'); if (btn) btn.style.display = 'none'; } });
+renderGrid(); renderEditor();
+</script>
+</body>
+</html>
